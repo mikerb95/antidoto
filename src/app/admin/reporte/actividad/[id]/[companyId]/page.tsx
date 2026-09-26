@@ -9,6 +9,7 @@ import { brandPalette } from "@/lib/brand-palette";
 import { ESTADO_STYLES } from "@/lib/data";
 import { formatDateTime } from "@/lib/live-report-format";
 import { colors } from "@/lib/theme";
+import { lugar } from "@/lib/colombia";
 import ReportFrame, { ReportBar, ReportSection, ReportStats, reportTable, reportTd, reportTh } from "@/components/report/ReportFrame";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +47,8 @@ export default async function ReporteActividadPage({ params }: { params: Promise
   const scored = participants.filter((p) => p.puntaje !== null);
   const avgScore = scored.length ? scored.reduce((s, p) => s + p.puntaje!, 0) / scored.length : null;
   const p = brandPalette(brand);
+  const withCargo = participants.some((x) => x.cargo);
+  const withPlace = participants.some((x) => x.municipio);
 
   return (
     <ReportFrame
@@ -145,7 +148,9 @@ export default async function ReporteActividadPage({ params }: { params: Promise
               <tr>
                 <th style={{ ...reportTh, width: 36 }}>#</th>
                 <th style={reportTh}>Nombre</th>
-                <th style={{ ...reportTh, width: "34%" }}>Avance</th>
+                {withCargo && <th style={reportTh}>Cargo</th>}
+                {withPlace && <th style={reportTh}>Municipio</th>}
+                <th style={{ ...reportTh, width: withCargo || withPlace ? "22%" : "34%" }}>Avance</th>
                 <th style={{ ...reportTh, textAlign: "right" }}>Puntaje</th>
                 <th style={reportTh}>Estado</th>
               </tr>
@@ -155,6 +160,8 @@ export default async function ReporteActividadPage({ params }: { params: Promise
                 <tr key={`${x.codigo}-${i}`}>
                   <td style={{ ...reportTd, color: colors.muted }}>{i + 1}</td>
                   <td style={{ ...reportTd, fontWeight: 600 }}>{x.nombre}</td>
+                  {withCargo && <td style={reportTd}>{x.cargo ?? "–"}</td>}
+                  {withPlace && <td style={reportTd}>{placeLabel(x.municipio)}</td>}
                   <td style={reportTd}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 36px", gap: 8, alignItems: "center" }}>
                       <ReportBar brand={brand} pct={x.avance} />
@@ -162,7 +169,7 @@ export default async function ReporteActividadPage({ params }: { params: Promise
                     </div>
                   </td>
                   <td style={{ ...reportTd, textAlign: "right" }}>{x.puntaje === null ? "–" : x.puntaje.toFixed(1).replace(".", ",")}</td>
-                  <td style={{ ...reportTd, color: x.completed_at ? "#1E6B3A" : colors.muted, fontWeight: 600 }}>{x.completed_at ? "Completó" : "En curso"}</td>
+                  <td style={{ ...reportTd, color: x.completed_at ? "#1E6B3A" : colors.muted, fontWeight: 600, whiteSpace: "nowrap" }}>{x.completed_at ? "Completó" : "En curso"}</td>
                 </tr>
               ))}
             </tbody>
@@ -171,6 +178,12 @@ export default async function ReporteActividadPage({ params }: { params: Promise
       </ReportSection>
     </ReportFrame>
   );
+}
+
+function placeLabel(code: string | null) {
+  const l = lugar(code);
+  if (!l) return "–";
+  return l.municipio === l.departamento ? l.municipio : `${l.municipio} (${l.departamento})`;
 }
 
 function Legend({ color }: { color: string }) {

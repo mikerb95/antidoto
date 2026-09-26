@@ -1,27 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Tiny5 } from "next/font/google";
 import styles from "./player.module.css";
 import SceneCanvas from "./SceneCanvas";
 import PixelIcon from "./PixelIcon";
 import { sceneSound } from "./sound";
 import { SCENE_MAPS } from "./scenes";
+import TopBar from "./TopBar";
+import RouteHub from "./RouteHub";
+import { routeProgress, type Results } from "./progress";
 import { risksInMoment, type Moment, type PlayScene, type Zone } from "./scenes/types";
 import type { PublicExperience, RiskResult, RiskTexts } from "@/lib/experiences/types";
 import { GRAINS_CORRECT, GRAINS_FOUND } from "@/lib/experiences/texts";
 import { answerExperienceRisk, finishExperience, revealExperienceRisks } from "@/lib/experience-actions";
-import { LOGO_SRC } from "@/lib/theme";
 import { brandPalette, INK, mix, type PublicBrand } from "@/lib/brand-palette";
-import { CoBrand } from "@/components/BrandLogo";
+import type { ProfileConfig } from "@/lib/profile";
 
 // Fuente pixel libre (OFL) en lugar de Volter, que es de Sulake: Tiny5 es la más parecida
 // y se lee nítida desde 16 px. Se sirve desde el propio dominio con next/font y solo se
 // descarga en las páginas que usan el jugador.
 const pixel = Tiny5({ subsets: ["latin"], weight: "400", variable: "--font-pixel" });
 
-type Phase = "portada" | "intro" | "juego" | "completo" | "final" | "resumen";
+type Phase = "cargando" | "intro" | "juego" | "completo" | "final" | "resumen";
 
 interface Bubble {
   id: number;
@@ -50,39 +51,106 @@ interface Props {
   exitHref?: string;
   /** Marca de la empresa del código; sin ella, la de Antídoto. */
   brand?: PublicBrand | null;
+  /** Nombre de la empresa del código, para la bienvenida. */
+  company?: string | null;
+  /** Si ya vio la bienvenida y qué datos pide el código en la ficha. */
+  onboarding: { done: boolean; config: ProfileConfig | null };
 }
 
 const OPTION_KEYS = ["A", "B", "C"];
 
-type Results = Map<string, RiskResult>;
+/** El tutorial sale una vez por navegador; sin almacenamiento, sale siempre que no haya avance. */
+const TUTORIAL_KEY = "antidoto:tutorial-escena";
+
+function tutorialSeen(): boolean {
+  try {
+    return localStorage.getItem(TUTORIAL_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markTutorialSeen() {
+  try {
+    localStorage.setItem(TUTORIAL_KEY, "1");
+  } catch {
+    // Sin almacenamiento (ventana privada): no pasa nada, solo se repetiría.
+  }
+}
+
+type View = { kind: "mapa"; celebrate: number | null } | { kind: "estacion"; index: number; wasDone: boolean; tutorial: boolean };
 
 /**
- * La serie se juega estación por estación: arranca en la primera que tenga riesgos por
- * resolver y, al terminarla, se desbloquea la siguiente. Las respuestas de todas las
- * estaciones viven aquí; cada estación monta su propia escena.
+ * La serie se juega desde el mapa de la ruta: la primera vez Ramiro da la bienvenida (y
+ * se llena la ficha, si el código la pide); desde ahí se entra a cada estación, que se
+ * abre al terminar la anterior. Las respuestas de todas las estaciones viven aquí.
  */
 export default function ExperiencePlayer(props: Props) {
-  const { stations, initialResults } = props;
+  const { stations, initialResults, brand, onboarding } = props;
   const [results, setResults] = useState<Results>(() => new Map(initialResults.map((r) => [r.id, r])));
-  const [index, setIndex] = useState(() => {
-    const done = new Set(initialResults.map((r) => r.id));
-    const k = stations.findIndex((st) => st.risks.some((r) => !done.has(r.id)));
-    return k === -1 ? stations.length - 1 : k;
-  });
-  const experience = stations[index];
+  const [view, setView] = useState<View>({ kind: "mapa", celebrate: null });
+  const [welcomeOpen, setWelcomeOpen] = useState(!onboarding.done);
+  const [onboarded, setOnboarded] = useState(onboarding.done);
+
+  function enter(index: number) {
+    const prog = routeProgress(stations, results);
+    setView({
+      kind: "estacion",
+      index,
+      wasDone: prog.done[index],
+      tutorial: index === 0 && results.size === 0 && !tutorialSeen(),
+    });
+  }
+
+  function backToMap() {
+    if (view.kind !== "estacion") return;
+    const nowDone = routeProgress(stations, results).done[view.index];
+    setView({ kind: "mapa", celebrate: !view.wasDone && nowDone ? view.index : null });
+  }
+
+  function restart() {
+    setResults(new Map());
+    setView({ kind: "mapa", celebrate: null });
+  }
+
   return (
-    <StationPlayer
-      key={experience.key}
-      {...props}
-      experience={experience}
-      results={results}
-      setResults={setResults}
-      onNext={index + 1 < stations.length ? () => setIndex(index + 1) : undefined}
-      onRestart={() => {
-        setResults(new Map());
-        setIndex(0);
-      }}
-    />
+    <div className={`${styles.root} ${pixel.variable}`} style={brand ? brandSkin(brand) : undefined}>
+      {view.kind === "mapa" ? (
+        <RouteHub
+          stations={stations}
+          results={results}
+          participant={props.participant}
+          company={props.company ?? null}
+          brand={brand}
+          mode={props.mode}
+          paused={props.paused}
+          exitAction={props.exitAction}
+          exitHref={props.exitHref}
+          welcomeOpen={welcomeOpen}
+          profileConfig={onboarding.config}
+          onboarded={onboarded}
+          celebrate={view.celebrate}
+          onWelcomeDone={() => {
+            setWelcomeOpen(false);
+            setOnboarded(true);
+          }}
+          onReplayWelcome={() => setWelcomeOpen(true)}
+          onEnter={enter}
+          onRestart={restart}
+        />
+      ) : (
+        <StationPlayer
+          key={stations[view.index].key}
+          {...props}
+          experience={stations[view.index]}
+          results={results}
+          setResults={setResults}
+          tutorial={view.tutorial}
+          onBack={backToMap}
+          onRestart={restart}
+        />
+      )}
+    </div>
   );
 }
 
@@ -90,8 +158,10 @@ interface StationProps extends Props {
   experience: PublicExperience;
   results: Results;
   setResults: React.Dispatch<React.SetStateAction<Results>>;
-  /** Pasa a la siguiente estación de la serie; indefinido en la última. */
-  onNext?: () => void;
+  /** Primera vez en la ruta: Ramiro enseña los controles antes de buscar. */
+  tutorial: boolean;
+  /** Vuelve al mapa de la ruta. */
+  onBack: () => void;
   onRestart: () => void;
 }
 
@@ -101,18 +171,18 @@ function StationPlayer({
   participant,
   mode,
   previewTexts,
-  paused,
   exitAction,
   exitHref,
   brand,
   results,
   setResults,
-  onNext,
+  tutorial,
+  onBack,
   onRestart,
 }: StationProps) {
   const map = SCENE_MAPS[experience.scene];
   const [scene, setScene] = useState<PlayScene | null>(null);
-  const [phase, setPhase] = useState<Phase>("portada");
+  const [phase, setPhase] = useState<Phase>("cargando");
   const [moment, setMoment] = useState<Moment>(1);
   const [ask, setAsk] = useState<{ riskId: string; side: "left" | "right"; zone: string } | null>(null);
   const [outcome, setOutcome] = useState<RiskResult | null>(null);
@@ -121,11 +191,9 @@ function StationPlayer({
   const [toast, setToast] = useState<Toast | null>(null);
   const [zoneList, setZoneList] = useState<Zone[] | null>(null);
   const [confirmReveal, setConfirmReveal] = useState(false);
-  const muted = useSyncExternalStore(
-    sceneSound().subscribe,
-    () => sceneSound().muted,
-    () => false,
-  );
+  // Paso del tutorial; null = sin tutorial o ya terminado.
+  const [coach, setCoach] = useState<number | null>(null);
+  const questRef = useRef<HTMLElement>(null);
   const [maxHeight, setMaxHeight] = useState(560);
   const ids = useRef(0);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -137,11 +205,9 @@ function StationPlayer({
   const found = mine.length;
   const correct = mine.filter((r) => r.correct).length;
   const spotted = mine.filter((r) => r.chosen !== null).length;
-  const all = [...results.values()];
-  const allCorrect = all.filter((r) => r.correct).length;
-  const grains = allCorrect * GRAINS_CORRECT + (all.filter((r) => r.chosen !== null).length - allCorrect) * GRAINS_FOUND;
+  const { grains } = routeProgress(stations, results);
   const allDone = found >= total;
-  const next = onNext ? stations[stations.indexOf(experience) + 1] : null;
+  const next = stations[stations.indexOf(experience) + 1] ?? null;
 
   useEffect(() => {
     const fit = () => setMaxHeight(Math.max(260, window.innerHeight - 150));
@@ -192,25 +258,56 @@ function StationPlayer({
     sceneSound().play(kind);
   }
 
-  function start() {
-    if (!scene) return;
-    sceneSound().unlock();
-    sfx("open");
+  /** Al montar la escena: la historia arranca sola (se entró desde el mapa con un clic). */
+  function begin(sc: PlayScene) {
+    setScene(sc);
     if (allDone) {
       setPhase("completo");
       return;
     }
     setPhase("intro");
     setMoment(1);
-    scene.playIntro(() => {
-      setPhase("juego");
-      showToast(map.start);
-    });
+    sc.playIntro(startSearch);
+  }
+
+  function startSearch() {
+    setPhase("juego");
+    if (tutorial) setCoach(0);
+    else showToast(map.start);
   }
 
   function skipIntro() {
     setBubbles([]);
-    scene?.skipIntro(() => setPhase("juego"));
+    scene?.skipIntro(startSearch);
+  }
+
+  const coachSteps = [
+    `Esta es la escena. Aquí hay ${total} errores escondidos en lo que hace ${experience.character}.`,
+    "La historia tiene 3 momentos: cámbialos aquí abajo. Cada uno esconde errores distintos.",
+    "¿Te quedaste sin ideas? Pista marca un error con una estrella y Zonas te deja elegir de una lista.",
+    "En este panel llevas la cuenta. Toca un riesgo ya encontrado para volver a leer la explicación.",
+    "Ahora tú: toca donde brilla la estrella.",
+  ];
+  const coachSpot = coach === null ? null : (["stage", "moments", "help", "quest", "stage"] as const)[coach];
+  // Mientras Ramiro explica no se puede tocar la escena; en el último paso, sí.
+  const coaching = coach !== null && coach < coachSteps.length - 1;
+
+  function coachNext() {
+    if (coach === null) return;
+    const to = coach + 1;
+    sfx("pop");
+    if (coachSpot === "help") questRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (to === coachSteps.length - 1 && scene) {
+      const zone = Object.entries(map.riskZones[moment]).find(([, r]) => !results.has(r))?.[0];
+      if (zone) scene.setHint(zone);
+    }
+    setCoach(to);
+  }
+
+  function endCoach() {
+    setCoach(null);
+    markTutorialSeen();
+    scene?.setHint(null);
   }
 
   function replay() {
@@ -241,6 +338,7 @@ function StationPlayer({
     const riskId = map.riskZones[moment][zone.id];
     const side = zone.x < 200 ? "right" : "left";
     if (riskId) {
+      if (coach !== null) endCoach();
       const done = results.get(riskId);
       sfx("open");
       if (done) setOutcome(done);
@@ -252,7 +350,7 @@ function StationPlayer({
   }
 
   function onTap(x: number, y: number, touch: boolean) {
-    if (!scene || phase !== "juego" || scene.busy || ask || outcome || zoneList || confirmReveal) return;
+    if (!scene || phase !== "juego" || scene.busy || ask || outcome || zoneList || confirmReveal || coaching) return;
     scene.ripple(x, y);
     const zone = scene.hitTest(x, y, touch ? 6 : 2);
     if (!zone) {
@@ -379,24 +477,6 @@ function StationPlayer({
     });
   }
 
-  function restartPreview() {
-    if (!scene) return;
-    onRestart();
-    setMoment(1);
-    setBubbles([]);
-    scene.reset();
-    setPhase("portada");
-  }
-
-  function toggleSound() {
-    const next = !muted;
-    sceneSound().setMuted(next);
-    if (!next) {
-      sceneSound().unlock();
-      sfx("ok");
-    }
-  }
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
@@ -408,69 +488,28 @@ function StationPlayer({
   });
 
   const askRisk = ask ? riskById.get(ask.riskId) : null;
-  const windowOpen = !!(ask || outcome || zoneList || confirmReveal);
+  const windowOpen = !!(ask || outcome || zoneList || confirmReveal || coaching);
   const momentInfo = map.moments.find((m) => m.id === moment)!;
   const sceneLabel = `Escena en pixel art: ${map.place} ${momentInfo.hint}`;
 
   return (
-    <div className={`${styles.root} ${pixel.variable}`} style={brand ? brandSkin(brand) : undefined}>
-      <header className={styles.topbar}>
-        {brand ? (
-          <CoBrand brand={brand} surface="oscuro" height={30} />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={LOGO_SRC} alt="Antídoto" className={styles.logo} />
-        )}
-        <div className={styles.roomInfo}>
-          <span className={styles.roomDot} aria-hidden />
-          <div style={{ minWidth: 0 }}>
-            <div className={styles.roomName}>
-              {experience.series} · Estación {experience.station}: {experience.title}
-            </div>
-            <div className={styles.roomSub}>
-              {experience.tag.charAt(0) + experience.tag.slice(1).toLowerCase()} ·{" "}
-              {mode === "preview" ? "Vista previa" : participant}
-            </div>
-          </div>
-        </div>
-        <div className={styles.spacer} />
-        <div className={styles.purse} aria-label={`${grains} granos de café, ${found} de ${total} riesgos`}>
-          <span className={styles.purseItem} title="Granos de café">
-            <PixelIcon name="grano" size={18} />
-            <span key={grains} className={grains > 0 ? styles.purseBump : undefined}>
-              {grains}
-            </span>
-          </span>
-          <span className={styles.purseItem} title="Riesgos encontrados">
-            <PixelIcon name="riesgo" size={18} />
-            {found}/{total}
-          </span>
-        </div>
-        <button
-          type="button"
-          className={styles.iconButton}
-          onClick={toggleSound}
-          aria-label={muted ? "Activar sonido" : "Silenciar"}
-        >
-          <PixelIcon name={muted ? "mudo" : "sonido"} size={18} />
-        </button>
-        {exitAction ? (
-          <form action={exitAction}>
-            <button type="submit" className={styles.iconButton} aria-label="Salir">
-              <PixelIcon name="puerta" size={14} /> <span className={styles.exitLabel}>Salir</span>
-            </button>
-          </form>
-        ) : exitHref ? (
-          <Link href={exitHref} className={styles.iconButton} aria-label="Salir">
-            <PixelIcon name="puerta" size={14} /> <span className={styles.exitLabel}>Salir</span>
-          </Link>
-        ) : null}
-      </header>
+    <>
+      <TopBar
+        brand={brand}
+        title={`${experience.series} · Estación ${experience.station}: ${experience.title}`}
+        sub={`${experience.tag.charAt(0) + experience.tag.slice(1).toLowerCase()} · ${mode === "preview" ? "Vista previa" : participant}`}
+        grains={grains}
+        found={found}
+        total={total}
+        onMap={onBack}
+        exitAction={exitAction}
+        exitHref={exitHref}
+      />
 
       <main className={styles.main}>
         <div className={styles.stageCol}>
-          <div className={styles.stageFrame}>
-            <SceneCanvas sceneKey={experience.scene} onScene={setScene} onSay={onSay} onTap={onTap} maxHeight={maxHeight} label={sceneLabel}>
+          <div className={`${styles.stageFrame} ${coachSpot === "stage" ? styles.spot : ""}`}>
+            <SceneCanvas sceneKey={experience.scene} onScene={begin} onSay={onSay} onTap={onTap} maxHeight={maxHeight} label={sceneLabel}>
               <div className={styles.overlay}>
                 {bubbles.map((b, i) => (
                   // Como en Habbo: la burbuja nueva aparece sobre el que habla y empuja
@@ -501,73 +540,30 @@ function StationPlayer({
                   </div>
                 )}
 
-                {phase === "portada" && (
-                  <>
-                    <div className={styles.dim} />
-                    <section className={`${styles.window} ${styles.dialogCenter}`} role="dialog" aria-labelledby="xp-cover-title">
-                      <div className={styles.winHead}>
-                        <span className={styles.winTitle}>
-                          {experience.tag.charAt(0) + experience.tag.slice(1).toLowerCase()}
-                        </span>
+                {phase === "cargando" && <div className={styles.dim} />}
+
+                {coach !== null && (
+                  <section className={`${styles.window} ${styles.coach}`} role="dialog" aria-label="Tutorial" aria-live="polite">
+                    <div className={styles.talkFace} aria-hidden>
+                      <PixelIcon name={map.speaker} size={40} />
+                    </div>
+                    <div className={styles.talkBody}>
+                      <div className={styles.talkName}>
+                        {experience.character} · {coach + 1}/{coachSteps.length}
                       </div>
-                      <div className={styles.winBody}>
-                        <span className={styles.coverKicker}>
-                          {experience.series.toUpperCase()} · ESTACIÓN {experience.station}
-                        </span>
-                        <h1 id="xp-cover-title" className={styles.coverTitle}>
-                          {experience.title}
-                        </h1>
-                        <p>
-                          {mode === "preview" ? "Vista previa: nada de lo que respondas se guarda." : `¡Hola, ${participant}!`}{" "}
-                          {experience.description}
-                        </p>
-                        <ol className={styles.steps}>
-                          <li>
-                            <PixelIcon name="repetir" size={16} /> Mira lo que hace {experience.character}.
-                          </li>
-                          <li>
-                            <PixelIcon name="riesgo" size={16} /> Toca donde veas un error: son {total}.
-                          </li>
-                          <li>
-                            <PixelIcon name="check" size={16} /> Elige qué está mal y gana granos de café.
-                          </li>
-                        </ol>
-                        <div className={styles.stations} aria-label="Estaciones de la ruta">
-                          {stations.map((s) => (
-                            <span
-                              key={s.key}
-                              className={`${styles.station} ${s.station === experience.station ? styles.stationOn : styles.stationOff}`}
-                            >
-                              {s.station < experience.station ? (
-                                <PixelIcon name="check" size={11} />
-                              ) : (
-                                s.station !== experience.station && <PixelIcon name="candado" size={11} />
-                              )}
-                              {s.station}. {s.title.split(":")[0]}
-                            </span>
-                          ))}
-                          <span className={`${styles.station} ${styles.stationOff}`}>y más...</span>
-                        </div>
-                        {paused && mode === "play" ? (
-                          <p style={{ color: "#a66b00", fontWeight: 700 }}>Esta actividad está pausada por tu administrador.</p>
-                        ) : (
-                          <button
-                            type="button"
-                            autoFocus
-                            className={`${styles.button} ${styles.go}`}
-                            onClick={start}
-                            disabled={!scene}
-                          >
-                            {allDone
-                              ? "Ver cómo se hace bien"
-                              : found > 0
-                                ? `Continuar (${found}/${total})`
-                                : experience.enter}
+                      <p className={styles.talkText}>{coachSteps[coach]}</p>
+                      <div className={styles.talkActions}>
+                        <button type="button" className={styles.textButton} onClick={endCoach}>
+                          Saltar tutorial
+                        </button>
+                        {coaching && (
+                          <button type="button" autoFocus className={`${styles.button} ${styles.primary}`} onClick={coachNext}>
+                            Sigue ▸
                           </button>
                         )}
                       </div>
-                    </section>
-                  </>
+                    </div>
+                  </section>
                 )}
 
                 {askRisk && ask && (
@@ -784,24 +780,19 @@ function StationPlayer({
                             `¡Completaste la ${experience.series}, de principio a fin!`
                           )}
                         </p>
-                        {next ? (
-                          <button
-                            type="button"
-                            autoFocus
-                            className={`${styles.button} ${styles.go}`}
-                            style={{ width: "100%" }}
-                            onClick={onNext}
-                          >
-                            Seguir a la estación {next.station}
-                          </button>
-                        ) : mode === "play" ? (
+                        {!next && mode === "play" ? (
                           <form action={finishExperience}>
                             <button type="submit" autoFocus className={`${styles.button} ${styles.go}`} style={{ width: "100%" }}>
-                              Terminar
+                              Terminar la ruta
                             </button>
                           </form>
                         ) : (
-                          <button type="button" autoFocus className={`${styles.button} ${styles.go}`} onClick={restartPreview}>
+                          <button type="button" autoFocus className={`${styles.button} ${styles.go}`} style={{ width: "100%" }} onClick={onBack}>
+                            {next ? `Volver a la ruta y seguir a la estación ${next.station}` : "Volver a la ruta"}
+                          </button>
+                        )}
+                        {!next && mode === "preview" && (
+                          <button type="button" className={styles.button} onClick={onRestart}>
                             Volver a empezar
                           </button>
                         )}
@@ -843,7 +834,7 @@ function StationPlayer({
                 >
                   <PixelIcon name="repetir" size={16} />
                 </button>
-                <div className={styles.moments} role="group" aria-label="Momentos de la escena">
+                <div className={`${styles.moments} ${coachSpot === "moments" ? styles.spot : ""}`} role="group" aria-label="Momentos de la escena">
                   {map.moments.map((m) => (
                     <button
                       key={m.id}
@@ -859,12 +850,17 @@ function StationPlayer({
                     </button>
                   ))}
                 </div>
-                <button type="button" className={styles.iconButton} onClick={hint} disabled={phase !== "juego" || windowOpen}>
+                <button
+                  type="button"
+                  className={`${styles.iconButton} ${coachSpot === "help" ? styles.spot : ""}`}
+                  onClick={hint}
+                  disabled={phase !== "juego" || windowOpen}
+                >
                   <PixelIcon name="pista" size={16} /> Pista
                 </button>
                 <button
                   type="button"
-                  className={styles.iconButton}
+                  className={`${styles.iconButton} ${coachSpot === "help" ? styles.spot : ""}`}
                   onClick={openZones}
                   disabled={phase !== "juego" || windowOpen}
                 >
@@ -877,7 +873,7 @@ function StationPlayer({
         </div>
 
         <aside className={styles.quest}>
-          <section className={styles.window} aria-labelledby="xp-quest-title">
+          <section ref={questRef} className={`${styles.window} ${coachSpot === "quest" ? styles.spot : ""}`} aria-labelledby="xp-quest-title">
             <div className={styles.winHead}>
               <PixelIcon name="riesgo" size={16} />
               <span className={styles.winTitle} id="xp-quest-title">
@@ -940,7 +936,7 @@ function StationPlayer({
           </section>
         </aside>
       </main>
-    </div>
+    </>
   );
 }
 

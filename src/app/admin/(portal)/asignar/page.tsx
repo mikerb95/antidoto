@@ -5,6 +5,7 @@ import { listCompanies } from "@/lib/queries";
 import { EXPERIENCES, getExperience, seriesEntry, seriesFrom } from "@/lib/experiences/catalog";
 import { colors, calSans } from "@/lib/theme";
 import AssignForm from "@/components/admin/AssignForm";
+import { lastCargosByCompany } from "@/lib/participant-profile";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "Asignar actividad" };
 export default async function AsignarPage({ searchParams }: { searchParams: Promise<{ empresa?: string; actividad?: string }> }) {
   await requireSuper();
   const { empresa, actividad } = await searchParams;
-  const companies = await listCompanies();
+  const [companies, cargosByCompany] = await Promise.all([listCompanies(), lastCargosByCompany()]);
 
   // Una serie se asigna completa desde su primera estación: una opción por serie.
   const entries = [...new Map(EXPERIENCES.map((e) => [e.series, seriesEntry(e)])).values()];
@@ -49,6 +50,7 @@ export default async function AsignarPage({ searchParams }: { searchParams: Prom
         activities={activities}
         defaultCompany={preCompany}
         defaultActivity={preActivity ? seriesEntry(preActivity).key : (activities[0]?.key ?? null)}
+        cargosByCompany={cargosByCompany}
       />
     </div>
   );

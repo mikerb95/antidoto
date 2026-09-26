@@ -208,8 +208,8 @@ export const REQUISITOS_FUNCIONALES: Modulo[] = [
         estado: "implementado",
         origen: "src/app/admin/(portal)/actividades/[id]/export/route.ts",
         notas:
-          "El archivo lleva BOM UTF-8 para Excel y respeta el mismo filtro por empresa (?empresa= para la vista de una sola). Usa el mismo csvCell que el export de partidas: neutraliza fórmulas (=, +, -, @) y el nombre va en filename* para admitir tildes.",
-        relacionados: ["RF-103"],
+          "El archivo lleva BOM UTF-8 para Excel y respeta el mismo filtro por empresa (?empresa= para la vista de una sola). Usa el mismo csvCell que el export de partidas: neutraliza fórmulas (=, +, -, @) y el nombre va en filename* para admitir tildes. Desde el 2026-09-26 el botón se llama \"CSV de códigos\" para distinguirlo del CSV de participantes (RF-914).",
+        relacionados: ["RF-103", "RF-914"],
       },
       {
         id: "RF-205",
@@ -239,13 +239,13 @@ export const REQUISITOS_FUNCIONALES: Modulo[] = [
         id: "RF-301",
         titulo: "Asignar una actividad a una empresa",
         descripcion:
-          "El superadmin asigna una actividad de la biblioteca a una empresa elegida de la lista (nunca escrita a mano) con una fecha de cierre opcional; se crea el código para sus participantes.",
+          "El superadmin asigna una actividad de la biblioteca a una empresa elegida de la lista (nunca escrita a mano) con una fecha de cierre opcional y elige qué datos se le piden a cada participante (cargo de una lista y lugar); se crea el código para sus participantes.",
         prioridad: "alta",
         estado: "implementado",
         origen: "assignActivity en src/lib/actions.ts, src/app/admin/(portal)/asignar/page.tsx, src/components/admin/AssignForm.tsx, tabla activity_codes",
         notas:
-          "Formato PREFIJO-EMPRESA-XXXXXX: sufijo de 6 caracteres con crypto (sin 0/O ni 1/I), ~1.000 millones de combinaciones; antes eran 2 dígitos y bastaban 89 intentos. Se reintenta hasta 10 veces si choca con el UNIQUE. Desde el 2026-09-25 solo asigna el superadmin (antes un nombre mal escrito creaba una empresa nueva sin avisar) y una serie se asigna completa desde su primera estación.",
-        relacionados: ["RF-004", "RF-302"],
+          "Formato PREFIJO-EMPRESA-XXXXXX: sufijo de 6 caracteres con crypto (sin 0/O ni 1/I), ~1.000 millones de combinaciones; antes eran 2 dígitos y bastaban 89 intentos. Se reintenta hasta 10 veces si choca con el UNIQUE. Desde el 2026-09-25 solo asigna el superadmin (antes un nombre mal escrito creaba una empresa nueva sin avisar) y una serie se asigna completa desde su primera estación. Los datos que pide el código van en activity_code_profile (RF-913).",
+        relacionados: ["RF-004", "RF-302", "RF-913"],
       },
       {
         id: "RF-302",
@@ -307,8 +307,9 @@ export const REQUISITOS_FUNCIONALES: Modulo[] = [
         prioridad: "media",
         estado: "implementado",
         origen: "src/components/report/ReportFrame.tsx, src/app/admin/reporte/actividad/[id]/[companyId]/page.tsx, src/app/admin/reporte/partida/[gameId]/[matchId]/page.tsx",
-        notas: "El admin de empresa solo abre el de la suya. El CSV se mantiene igual para Excel.",
-        relacionados: ["RF-307"],
+        notas:
+          "El admin de empresa solo abre el de la suya. El CSV se mantiene igual para Excel. Si algún participante llenó la ficha (RF-913), la tabla del reporte de actividad suma las columnas Cargo y Municipio.",
+        relacionados: ["RF-307", "RF-913"],
       },
       {
         id: "RF-304",
@@ -725,8 +726,8 @@ export const REQUISITOS_FUNCIONALES: Modulo[] = [
         prioridad: "media",
         estado: "implementado",
         origen: "experienceRiskStats en src/lib/experience-data.ts, src/components/admin/ActivityResults.tsx, src/app/admin/escena/[key]/page.tsx",
-        notas: "El admin de empresa solo ve las respuestas de su empresa (companyFilter).",
-        relacionados: ["RF-202", "RF-904"],
+        notas: "El admin de empresa solo ve las respuestas de su empresa (companyFilter). Desde el 2026-09-26 el resumen se filtra por cargo, departamento y municipio (RF-914).",
+        relacionados: ["RF-202", "RF-904", "RF-914"],
       },
       {
         id: "RF-907",
@@ -755,8 +756,8 @@ export const REQUISITOS_FUNCIONALES: Modulo[] = [
         verificacion:
           "Tests de serie en src/lib/experiences.test.mts (ids únicos en toda la ruta, orden, puntaje sobre 14 riesgos); en el navegador, finca a transporte con recarga a mitad de ruta y cierre, con 14 respuestas y puntaje verificados en la base.",
         notas:
-          "Sin cambios de base de datos: los ids de riesgo son únicos en toda la serie, así las respuestas de todas las estaciones caben en la misma participación. Las estaciones siguientes no se asignan solas a una empresa; el reporte de la actividad agrupa los riesgos por estación.",
-        relacionados: ["RF-902", "RF-904", "RF-906"],
+          "Sin cambios de base de datos: los ids de riesgo son únicos en toda la serie, así las respuestas de todas las estaciones caben en la misma participación. Las estaciones siguientes no se asignan solas a una empresa; el reporte de la actividad agrupa los riesgos por estación. Desde el 2026-09-26 entre estación y estación se vuelve al mapa de la ruta (RF-912).",
+        relacionados: ["RF-902", "RF-904", "RF-906", "RF-912"],
       },
       {
         id: "RF-909",
@@ -802,6 +803,48 @@ export const REQUISITOS_FUNCIONALES: Modulo[] = [
         notas:
           "Respaldo: Resolución 2400 de 1979 (arts. 32, 121, 176, 177, 365, 642 y 643), Resolución 2646 de 2008 (riesgo psicosocial) y la guía de OSHA para trabajo en restaurantes. El resumen de la última estación celebra la ruta completa y la biblioteca ya no muestra la tarjeta de estación en construcción. Detalle en docs/investigacion-ux-habbo.md, sección 11.",
         relacionados: ["RF-908", "RF-910"],
+      },
+      {
+        id: "RF-912",
+        titulo: "Mapa de la ruta, bienvenida de Ramiro y tutorial",
+        descripcion:
+          "El participante llega a un mapa de la ruta con las estaciones en zigzag unidas por un camino de tierra: ve cuáles terminó, cuál sigue y cuáles siguen cerradas, y entra a cada una desde su ficha. La primera vez, Ramiro da la bienvenida encima del mapa en un diálogo de máquina de escribir (qué es la misión, cuántas estaciones y minutos, cómo se ganan los granos y que se puede parar y seguir después). En la primera estación, un tutorial enseña los controles antes de buscar. Una barra superior, como la de Habbo, muestra la marca, dónde está, el monedero de granos y riesgos, el sonido, volver al mapa y salir.",
+        prioridad: "alta",
+        estado: "implementado",
+        origen:
+          "src/components/experience/RouteHub.tsx, src/components/experience/TopBar.tsx, src/components/experience/progress.ts, src/components/experience/ExperiencePlayer.tsx, src/components/experience/player.module.css",
+        verificacion: "Revisión manual en la vista previa del admin (/admin/escena/<clave>), que muestra la bienvenida con una ficha de ejemplo sin guardar nada.",
+        notas:
+          "Granos: 100 por riesgo acertado a la primera y 25 por encontrado con error (GRAINS_CORRECT y GRAINS_FOUND en src/lib/experiences/texts.ts); la duración total suma el campo minutes de cada estación. El tutorial sale una vez por navegador (localStorage, con respaldo si no hay almacenamiento). Quien ya tenía avance antes de que existiera la bienvenida no la ve. Con movimiento reducido el texto sale completo, sin máquina de escribir.",
+        relacionados: ["RF-908", "RF-913", "RNF-28"],
+      },
+      {
+        id: "RF-913",
+        titulo: "Ficha del participante: cargo y lugar de listas cerradas",
+        descripcion:
+          "Al cerrar la bienvenida, el participante elige su cargo de la lista que armó el admin al asignar la actividad y su departamento y municipio de la DIVIPOLA del DANE (33 departamentos, 1.122 municipios). Cada código decide qué pide: cargo, lugar, ambos o nada. Al asignar otra actividad a la misma empresa, el formulario propone sus últimos cargos.",
+        prioridad: "alta",
+        estado: "implementado",
+        origen:
+          "src/lib/profile.ts, src/lib/participant-profile.ts, src/lib/colombia.ts, saveWelcome en src/lib/experience-actions.ts, src/components/admin/AssignForm.tsx, tablas activity_code_profile y participant_profiles en db/schema.sql",
+        verificacion:
+          "src/lib/profile.test.mts: DIVIPOLA completa y sin códigos repetidos, lectura de la lista de cargos (vacíos, repetidos, límites) y validación de la ficha contra las listas. La columna municipio solo admite 5 dígitos (CHECK en la base).",
+        notas:
+          "Solo listas cerradas para que los reportes se filtren sin \"Bogota\", \"bogotá\" y \"Bta\" por separado. Se guarda el código DANE del municipio; los dos primeros dígitos son el departamento. Lo que el código no pide se guarda vacío aunque llegue. La ficha se puede guardar con la actividad pausada: son datos del participante, no respuestas. Producción necesita scripts/migrate.mjs para las dos tablas nuevas.",
+        relacionados: ["RF-301", "RF-912", "RF-914", "RF-002"],
+      },
+      {
+        id: "RF-914",
+        titulo: "Resultados por cargo y lugar, y CSV de participantes",
+        descripcion:
+          "El resumen por riesgo de una actividad se filtra por cargo, departamento y municipio, con las opciones que de verdad respondieron sus participantes. El botón \"CSV de participantes\" descarga una fila por persona con empresa, código, nombre, cargo, departamento, municipio, código DANE, avance, puntaje, estado e inicio, con el mismo filtro aplicado.",
+        prioridad: "media",
+        estado: "implementado",
+        origen:
+          "profileOptions, experienceRiskStats y listProfiledParticipants en src/lib/experience-data.ts, src/components/admin/ProfileFilters.tsx, src/app/admin/(portal)/actividades/[id]/participantes/route.ts",
+        notas:
+          "Mismo alcance que la página: el admin de empresa solo ve y exporta la suya, y ?empresa= limita el CSV a una sola. El municipio manda sobre el departamento si llegan los dos. El CSV usa BOM UTF-8 y csvCell, como RF-204.",
+        relacionados: ["RF-204", "RF-906", "RF-913"],
       },
     ],
   },

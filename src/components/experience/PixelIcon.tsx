@@ -149,6 +149,17 @@ const ICONS = {
     "..knmmmk..",
     "...kkkk...",
   ],
+  mapa: [
+    "kkkkkkkkkkkk",
+    "keeeekccccck",
+    "keekekcccrck",
+    "keeeekccrrrk",
+    "kyyyykcccrck",
+    "kyyyykeeeeek",
+    "kccccceeeeek",
+    "kkkkkkkkkkkk",
+  ],
+  pin: ["..kkkk..", ".krrrrk.", "krrwwrrk", "krrwwrrk", ".krrrrk.", "..krrk..", "...kk..."],
   insignia: [
     "kkkkkkkkkkkkkk",
     "kccccccccccCCk",

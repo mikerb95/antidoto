@@ -18,7 +18,9 @@ import {
 } from "@/lib/styles";
 import { trendToPoints } from "@/lib/utils";
 import GroupsTable from "@/components/admin/GroupsTable";
-import { experienceRiskStats, missionStations } from "@/lib/experience-data";
+import { experienceRiskStats, missionStations, profileOptions } from "@/lib/experience-data";
+import { lugar } from "@/lib/colombia";
+import ProfileFilters from "@/components/admin/ProfileFilters";
 import type { Estado } from "@/lib/types";
 
 const ESTADOS: ("todos" | Estado)[] = ["todos", "activo", "pausado", "vencido"];
@@ -30,10 +32,12 @@ interface Props {
   company: { id: number; name: string } | null;
   q: string;
   estado: string;
+  /** Filtro por la ficha del participante (cargo, departamento, municipio); vacío = todos. */
+  filter?: { cargo?: string; dpto?: string; mpio?: string };
 }
 
 /** Resultados de una actividad: de todas las empresas o de una sola. */
-export default async function ActivityResults({ missionId: id, user, company, q, estado }: Props) {
+export default async function ActivityResults({ missionId: id, user, company, q, estado, filter = {} }: Props) {
   const mission = await getMission(id);
   if (!mission) notFound();
 
@@ -46,9 +50,16 @@ export default async function ActivityResults({ missionId: id, user, company, q,
   const trend = await getTrend(id, viewer);
   const stations = await missionStations(id);
   const experience = stations?.[0] ?? null;
+  const f = { cargo: filter.cargo ?? "", dpto: filter.dpto ?? "", mpio: filter.mpio ?? "" };
+  const filtered = !!(f.cargo || f.dpto || f.mpio);
   const riskReport = stations
-    ? await experienceRiskStats(id, stations, viewer)
+    ? await experienceRiskStats(id, stations, viewer, f)
     : null;
+  const options = stations ? await profileOptions(id, viewer) : { cargos: [], municipios: [] };
+  const places = options.municipios.flatMap((code) => {
+    const l = lugar(code);
+    return l ? [{ code, municipio: l.municipio, dpto: code.slice(0, 2), departamento: l.departamento }] : [];
+  });
 
   const groups = allGroups.filter(
     (g) =>
@@ -70,6 +81,7 @@ export default async function ActivityResults({ missionId: id, user, company, q,
     : 0;
 
   const exportQuery = new URLSearchParams({ q, estado, ...(company ? { empresa: String(company.id) } : {}) }).toString();
+  const filterParams = Object.fromEntries(Object.entries(f).filter(([, v]) => v));
   const basePath = company ? `/admin/empresas/${company.id}/actividades/${id}` : `/admin/actividades/${id}`;
   // Un reporte PDF por empresa, con su marca: las empresas con códigos en esta actividad.
   const reportCompanies = [...new Map(allGroups.map((g) => [g.company_id, g.empresa])).entries()].sort((a, b) =>
@@ -136,8 +148,21 @@ export default async function ActivityResults({ missionId: id, user, company, q,
               alignItems: "center",
             }}
           >
-            Exportar CSV
+            CSV de códigos
           </a>
+          {experience && (
+            <a
+              href={`/admin/actividades/${id}/participantes?${new URLSearchParams({ ...(company ? { empresa: String(company.id) } : {}), ...filterParams })}`}
+              className="btn-secondary"
+              style={{
+                ...secondaryButton,
+                display: "inline-flex",
+                alignItems: "center",
+              }}
+            >
+              CSV de participantes
+            </a>
+          )}
           {reportCompanies.length === 0 ? null : reportCompanies.length === 1 ? (
             <Link
               href={`/admin/reporte/actividad/${id}/${reportCompanies[0][0]}`}
@@ -275,9 +300,25 @@ export default async function ActivityResults({ missionId: id, user, company, q,
               Probar la escena ›
             </Link>
           </div>
+          {(options.cargos.length > 0 || places.length > 0) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+              <ProfileFilters
+                cargos={options.cargos}
+                places={places}
+                value={f}
+                basePath={basePath}
+                keep={{ ...(company ? {} : { q }), estado }}
+              />
+              {filtered && (
+                <span style={{ fontSize: 12.5, color: colors.muted }}>
+                  {riskReport.participants === 1 ? "1 participante" : `${riskReport.participants} participantes`} con este filtro.
+                </span>
+              )}
+            </div>
+          )}
           {riskReport.participants === 0 ? (
             <p style={{ fontSize: 13.5, color: colors.muted, margin: 0 }}>
-              Todavía nadie ha jugado esta escena.
+              {filtered ? "Nadie con este filtro ha jugado todavía." : "Todavía nadie ha jugado esta escena."}
             </p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -412,7 +453,7 @@ export default async function ActivityResults({ missionId: id, user, company, q,
         {ESTADOS.map((value) => (
           <Link
             key={value}
-            href={`${basePath}?${new URLSearchParams({ q, estado: value })}`}
+            href={`${basePath}?${new URLSearchParams({ q, estado: value, ...filterParams })}`}
             className={estado === value ? "btn-tab-active" : "btn-tab"}
             style={{
               ...(estado === value ? tabButtonActive : tabButton),

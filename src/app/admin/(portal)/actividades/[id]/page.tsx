@@ -10,12 +10,12 @@ export default async function DetallePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string; estado?: string }>;
+  searchParams: Promise<{ q?: string; estado?: string; cargo?: string; dpto?: string; mpio?: string }>;
 }) {
   const { id } = await params;
-  const { q = "", estado = "todos" } = await searchParams;
+  const { q = "", estado = "todos", cargo, dpto, mpio } = await searchParams;
   const user = (await currentUser())!;
   if (user.role === "empresa") redirect(`/admin/empresas/${user.company_id}/actividades/${id}`);
 
-  return <ActivityResults missionId={id} user={user} company={null} q={q} estado={estado} />;
+  return <ActivityResults missionId={id} user={user} company={null} q={q} estado={estado} filter={{ cargo, dpto, mpio }} />;
 }

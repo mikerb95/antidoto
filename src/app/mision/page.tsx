@@ -11,6 +11,7 @@ import { GAME_MODE } from "@/lib/data";
 import { loadAllOverrides, missionStations, participationAnswers, resultsFor } from "@/lib/experience-data";
 import { publicExperience } from "@/lib/experiences/texts";
 import ExperiencePlayer from "@/components/experience/ExperiencePlayer";
+import { participantProfile, profileConfigFor } from "@/lib/participant-profile";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +30,12 @@ export default async function MisionPage() {
   // Una serie (la Ruta del café) se juega estación por estación con el mismo código.
   const stations = await missionStations(p.mission_id);
   if (stations) {
-    const overrides = await loadAllOverrides(stations);
-    const answers = await participationAnswers(p.id);
+    const [overrides, answers, profile, profileConfig] = await Promise.all([
+      loadAllOverrides(stations),
+      participationAnswers(p.id),
+      participantProfile(p.id),
+      profileConfigFor(p.id),
+    ]);
     return (
       <ExperiencePlayer
         stations={stations.map((d) => publicExperience(d, overrides.get(d.key)!))}
@@ -40,6 +45,9 @@ export default async function MisionPage() {
         paused={p.estado !== "activo"}
         exitAction={leaveActivity}
         brand={brand}
+        company={p.empresa}
+        // Quien ya tenía avance antes de que existiera la bienvenida no la ve de nuevo.
+        onboarding={{ done: !!profile || answers.length > 0, config: profileConfig }}
       />
     );
   }

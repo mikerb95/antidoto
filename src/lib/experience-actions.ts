@@ -19,6 +19,8 @@ import {
   resultsFor,
   stationRisks,
 } from "./experience-data";
+import { profileConfigFor } from "./participant-profile";
+import { validateProfile } from "./profile";
 
 // --- Participante --------------------------------------------------------------
 
@@ -99,6 +101,29 @@ export async function revealExperienceRisks(
     await participationAnswers(ctx.participationId),
   );
   return { ok: true, results };
+}
+
+export type WelcomeOutcome = { ok: true } | { ok: false; error: string };
+
+/**
+ * Cierra la bienvenida y guarda los datos que pide el código. Se puede aunque la
+ * actividad esté pausada: son datos del participante, no respuestas del juego.
+ */
+export async function saveWelcome(input: { cargo: string | null; municipio: string | null }): Promise<WelcomeOutcome> {
+  const jar = await cookies();
+  const id = jar.get(PARTICIPATION_COOKIE)?.value;
+  const exists = id ? await one<{ id: string }>("SELECT id FROM participations WHERE id = ?", [id]) : null;
+  if (!id || !exists) return { ok: false, error: "Tu sesión terminó. Vuelve a entrar con tu código." };
+
+  const config = (await profileConfigFor(id)) ?? { cargos: null, askPlace: false };
+  const parsed = validateProfile(config, input);
+  if (!parsed.ok) return parsed;
+  await run(
+    `INSERT INTO participant_profiles (participation_id, cargo, municipio) VALUES (?, ?, ?)
+     ON CONFLICT(participation_id) DO UPDATE SET cargo = excluded.cargo, municipio = excluded.municipio`,
+    [id, parsed.value.cargo, parsed.value.municipio],
+  );
+  return { ok: true };
 }
 
 export async function finishExperience() {

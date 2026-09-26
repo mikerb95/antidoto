@@ -250,10 +250,19 @@ export async function listNotifications(user: AdminUser) {
 
 /** Participantes de una empresa en una misión, para su reporte PDF. */
 export async function listCompanyParticipants(missionId: string, companyId: number) {
-  const rows = await all<{ nombre: string; codigo: string; avance: number; puntaje: number | null; completed_at: string | null }>(
-    `SELECT p.participant_name AS nombre, ac.code AS codigo, p.avance, p.puntaje, p.completed_at
+  const rows = await all<{
+    nombre: string;
+    codigo: string;
+    avance: number;
+    puntaje: number | null;
+    completed_at: string | null;
+    cargo: string | null;
+    municipio: string | null;
+  }>(
+    `SELECT p.participant_name AS nombre, ac.code AS codigo, p.avance, p.puntaje, p.completed_at, pp.cargo, pp.municipio
      FROM participations p
      JOIN activity_codes ac ON ac.id = p.activity_code_id
+     LEFT JOIN participant_profiles pp ON pp.participation_id = p.id
      WHERE ac.mission_id = ? AND ac.company_id = ? AND ${LIVE_CODE}
      ORDER BY p.avance DESC, p.puntaje DESC, p.participant_name COLLATE NOCASE`,
     [missionId, companyId]

@@ -299,3 +299,23 @@ CREATE TABLE IF NOT EXISTS activity_code_archive (
   activity_code_id INTEGER PRIMARY KEY REFERENCES activity_codes(id) ON DELETE CASCADE,
   archived_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- --- Bienvenida y perfil del participante ----------------------------------------------
+-- Cada código decide qué datos pide al entrar, siempre de listas cerradas para que los
+-- reportes se puedan filtrar sin textos escritos a mano. Sin fila = no pide datos extra.
+CREATE TABLE IF NOT EXISTS activity_code_profile (
+  activity_code_id INTEGER PRIMARY KEY REFERENCES activity_codes(id) ON DELETE CASCADE,
+  -- JSON con los cargos para elegir; nulo = no se pregunta el cargo.
+  cargos           TEXT,
+  -- 1 = se preguntan departamento y municipio (lista DIVIPOLA en src/lib/colombia.ts).
+  ask_place        INTEGER NOT NULL DEFAULT 0 CHECK (ask_place IN (0, 1))
+);
+
+-- La fila se crea al terminar la bienvenida: sin fila, el participante todavía no la ha visto.
+CREATE TABLE IF NOT EXISTS participant_profiles (
+  participation_id TEXT PRIMARY KEY REFERENCES participations(id) ON DELETE CASCADE,
+  cargo            TEXT,
+  -- Código DANE del municipio: los dos primeros dígitos son el departamento.
+  municipio        TEXT CHECK (municipio IS NULL OR municipio GLOB '[0-9][0-9][0-9][0-9][0-9]'),
+  created_at       TEXT NOT NULL DEFAULT (datetime('now'))
+);

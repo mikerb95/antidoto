@@ -1,22 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { assignActivity, type AssignState } from "@/lib/actions";
 import { colors, calSans } from "@/lib/theme";
 import { card, fieldLabel, filledButton } from "@/lib/styles";
 import SceneThumb from "@/components/experience/SceneThumb";
 import type { ExperienceDef } from "@/lib/experiences/types";
+import { CARGO_LIMITS, DEFAULT_CARGOS } from "@/lib/profile";
 
 interface Props {
   companies: { id: number; name: string }[];
   activities: { key: string; scene: ExperienceDef["scene"]; title: string; detail: string }[];
   defaultCompany: number | null;
   defaultActivity: string | null;
+  /** Cargos del último código de cada empresa, para proponerlos otra vez. */
+  cargosByCompany: Record<number, string[]>;
 }
 
-export default function AssignForm({ companies, activities, defaultCompany, defaultActivity }: Props) {
+export default function AssignForm({ companies, activities, defaultCompany, defaultActivity, cargosByCompany }: Props) {
   const [state, action, pending] = useActionState<AssignState, FormData>(assignActivity, null);
+  const cargosFor = (id: number | null) => ((id && cargosByCompany[id]) || DEFAULT_CARGOS).join("\n");
+  const [askCargo, setAskCargo] = useState(true);
+  const [cargos, setCargos] = useState(() => cargosFor(defaultCompany));
+  // Al cambiar de empresa se proponen sus cargos, salvo que el admin ya haya escrito los suyos.
+  const [cargosEdited, setCargosEdited] = useState(false);
+  const cargoCount = cargos.split("\n").filter((c) => c.trim()).length;
 
   if (companies.length === 0) {
     return (
@@ -38,6 +47,9 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
         <select
           name="companyId"
           defaultValue={defaultCompany ?? ""}
+          onChange={(e) => {
+            if (!cargosEdited) setCargos(cargosFor(Number(e.target.value)));
+          }}
           required
           aria-label="Empresa"
           style={{ height: 46, borderRadius: 12, border: `1.5px solid ${colors.border}`, padding: "0 12px", fontSize: 15, background: "#fff", color: colors.ink, maxWidth: 420 }}
@@ -96,6 +108,58 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
           style={{ height: 46, borderRadius: 12, border: `1.5px solid ${colors.border}`, padding: "0 12px", fontSize: 15, maxWidth: 220 }}
         />
         <span style={{ fontSize: 12.5, color: colors.muted }}>Si lo dejas vacío, el código funciona hasta que lo pauses o lo quites. Lo puedes cambiar después.</span>
+      </fieldset>
+
+      <fieldset style={fieldset}>
+        <legend style={legend}>
+          <Step n={4} /> ¿Qué datos le pedimos a cada participante?
+        </legend>
+        <span style={{ fontSize: 12.5, color: colors.muted, marginTop: -4, lineHeight: 1.5 }}>
+          Se piden en la bienvenida, siempre con listas para elegir: así los resultados se pueden filtrar por cargo y por lugar sin nombres
+          escritos de mil formas.
+        </span>
+        <div style={{ ...card, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              name="askCargo"
+              checked={askCargo}
+              onChange={(e) => setAskCargo(e.target.checked)}
+              style={{ width: 18, height: 18, accentColor: colors.accent, marginTop: 1 }}
+            />
+            <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <span style={{ fontSize: 14.5, fontWeight: 700, color: colors.ink }}>Cargo</span>
+              <span style={{ fontSize: 12.5, color: colors.muted }}>El participante elige uno de los cargos que escribas aquí.</span>
+            </span>
+          </label>
+          {askCargo && (
+            <span style={{ display: "flex", flexDirection: "column", gap: 6, paddingLeft: 28 }}>
+              <textarea
+                name="cargos"
+                value={cargos}
+                onChange={(e) => {
+                  setCargos(e.target.value);
+                  setCargosEdited(true);
+                }}
+                rows={Math.min(12, Math.max(5, cargoCount + 1))}
+                aria-label="Cargos, uno por línea"
+                style={{ borderRadius: 12, border: `1.5px solid ${colors.border}`, padding: "10px 12px", fontSize: 14, lineHeight: 1.55, fontFamily: "inherit", resize: "vertical", color: colors.ink }}
+              />
+              <span style={{ fontSize: 12, color: colors.muted }}>
+                Uno por línea · {cargoCount} de máximo {CARGO_LIMITS.items}. Usa los nombres con los que la empresa quiere ver sus reportes.
+              </span>
+            </span>
+          )}
+        </div>
+        <label style={{ ...card, padding: "14px 16px", display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
+          <input type="checkbox" name="askPlace" defaultChecked style={{ width: 18, height: 18, accentColor: colors.accent, marginTop: 1 }} />
+          <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <span style={{ fontSize: 14.5, fontWeight: 700, color: colors.ink }}>Departamento y municipio</span>
+            <span style={{ fontSize: 12.5, color: colors.muted }}>
+              Los 33 departamentos y 1.122 municipios de Colombia según el DANE. No hay nada que configurar.
+            </span>
+          </span>
+        </label>
       </fieldset>
 
       {state?.error && (

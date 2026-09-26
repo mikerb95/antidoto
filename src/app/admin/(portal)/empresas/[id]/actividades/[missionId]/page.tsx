@@ -11,10 +11,10 @@ export default async function EmpresaActividadPage({
   searchParams,
 }: {
   params: Promise<{ id: string; missionId: string }>;
-  searchParams: Promise<{ estado?: string }>;
+  searchParams: Promise<{ estado?: string; cargo?: string; dpto?: string; mpio?: string }>;
 }) {
   const { id, missionId } = await params;
-  const { estado = "todos" } = await searchParams;
+  const { estado = "todos", cargo, dpto, mpio } = await searchParams;
   const user = (await currentUser())!;
   const companyId = Number(id);
   if (!Number.isInteger(companyId) || companyId <= 0) notFound();
@@ -29,6 +29,7 @@ export default async function EmpresaActividadPage({
       company={{ id: company.id, name: company.name }}
       q=""
       estado={estado}
+      filter={{ cargo, dpto, mpio }}
     />
   );
 }

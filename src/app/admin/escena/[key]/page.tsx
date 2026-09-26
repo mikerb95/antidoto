@@ -5,6 +5,7 @@ import { getExperience, seriesFrom } from "@/lib/experiences/catalog";
 import { loadAllOverrides, stationRisks } from "@/lib/experience-data";
 import { publicExperience, riskTexts } from "@/lib/experiences/texts";
 import ExperiencePlayer from "@/components/experience/ExperiencePlayer";
+import { DEFAULT_CARGOS } from "@/lib/profile";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,8 @@ export default async function EscenaPreviewPage({ params }: { params: Promise<{ 
       mode="preview"
       previewTexts={previewTexts}
       exitHref="/admin/biblioteca"
+      // La vista previa muestra la bienvenida con una ficha de ejemplo: nada se guarda.
+      onboarding={{ done: false, config: { cargos: DEFAULT_CARGOS, askPlace: true } }}
     />
   );
 }

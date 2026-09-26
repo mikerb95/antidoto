@@ -158,9 +158,61 @@ export interface RiskStat {
   topWrong: { text: string; count: number } | null;
 }
 
-/** Resumen por riesgo de una actividad de tipo escena (todas sus estaciones), filtrado por empresa. */
-export async function experienceRiskStats(missionId: string, stations: ExperienceDef[], user: AdminUser) {
+/** Filtro de los resultados por la ficha del participante (vacío = sin filtro). */
+export interface ProfileFilter {
+  cargo?: string;
+  /** Código DANE del departamento (2 dígitos). */
+  dpto?: string;
+  /** Código DANE del municipio (5 dígitos); manda sobre el departamento. */
+  mpio?: string;
+}
+
+/** Condición sobre la participación `p` según su ficha. */
+function profileFilterClause(f: ProfileFilter = {}): { clause: string; args: string[] } {
+  const parts: string[] = [];
+  const args: string[] = [];
+  if (f.cargo) {
+    parts.push("pp.cargo = ?");
+    args.push(f.cargo);
+  }
+  if (f.mpio) {
+    parts.push("pp.municipio = ?");
+    args.push(f.mpio);
+  } else if (f.dpto) {
+    parts.push("substr(pp.municipio, 1, 2) = ?");
+    args.push(f.dpto);
+  }
+  if (parts.length === 0) return { clause: "", args };
+  return {
+    clause: `AND EXISTS (SELECT 1 FROM participant_profiles pp WHERE pp.participation_id = p.id AND ${parts.join(" AND ")})`,
+    args,
+  };
+}
+
+/** Cargos y municipios que respondieron los participantes de una actividad, para los filtros. */
+export async function profileOptions(missionId: string, user: AdminUser) {
   const { clause, args } = companyFilter(user.role, user.company_id);
+  const rows = await all<{ cargo: string | null; municipio: string | null }>(
+    `SELECT DISTINCT pp.cargo, pp.municipio
+     FROM participant_profiles pp
+     JOIN participations p ON p.id = pp.participation_id
+     JOIN activity_codes ac ON ac.id = p.activity_code_id
+     WHERE ac.mission_id = ? AND ${LIVE_CODE} ${clause}`,
+    [missionId, ...args],
+  );
+  const es = (a: string, b: string) => a.localeCompare(b, "es");
+  return {
+    cargos: [...new Set(rows.map((r) => r.cargo).filter((c): c is string => !!c))].sort(es),
+    municipios: [...new Set(rows.map((r) => r.municipio).filter((m): m is string => !!m))],
+  };
+}
+
+/** Resumen por riesgo de una actividad de tipo escena (todas sus estaciones), filtrado por empresa y ficha. */
+export async function experienceRiskStats(missionId: string, stations: ExperienceDef[], user: AdminUser, filter?: ProfileFilter) {
+  const scope = companyFilter(user.role, user.company_id);
+  const prof = profileFilterClause(filter);
+  const clause = `${scope.clause} ${prof.clause}`;
+  const args = [...scope.args, ...prof.args];
   const rows = await all<{
     risk_id: string;
     option_index: number | null;
@@ -202,4 +254,32 @@ export async function experienceRiskStats(missionId: string, stations: Experienc
     };
   });
   return { participants: Number(participants?.n ?? 0), stats };
+}
+
+/** Participantes de una actividad con su ficha, para el CSV; mismo alcance y filtro que la página. */
+export async function listProfiledParticipants(missionId: string, user: AdminUser, filter?: ProfileFilter) {
+  const scope = companyFilter(user.role, user.company_id);
+  const prof = profileFilterClause(filter);
+  const rows = await all<{
+    empresa: string;
+    codigo: string;
+    nombre: string;
+    cargo: string | null;
+    municipio: string | null;
+    avance: number;
+    puntaje: number | null;
+    started_at: string;
+    completed_at: string | null;
+  }>(
+    `SELECT c.name AS empresa, ac.code AS codigo, p.participant_name AS nombre, pp.cargo, pp.municipio,
+            p.avance, p.puntaje, p.started_at, p.completed_at
+     FROM participations p
+     JOIN activity_codes ac ON ac.id = p.activity_code_id
+     JOIN companies c ON c.id = ac.company_id
+     LEFT JOIN participant_profiles pp ON pp.participation_id = p.id
+     WHERE ac.mission_id = ? AND ${LIVE_CODE} ${scope.clause} ${prof.clause}
+     ORDER BY c.name COLLATE NOCASE, p.participant_name COLLATE NOCASE`,
+    [missionId, ...scope.args, ...prof.args],
+  );
+  return rows.map((r) => ({ ...r, avance: Number(r.avance), puntaje: r.puntaje === null ? null : Number(r.puntaje) }));
 }

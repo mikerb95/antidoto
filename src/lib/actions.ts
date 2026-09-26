@@ -13,6 +13,7 @@ import { getExperience, seriesEntry } from "./experiences/catalog";
 import { PARTICIPATION_COOKIE } from "./participation";
 import { clientIp, isLimited, rateLimit, recordHit } from "./rate-limit";
 import { formatExpiryDate, isDateOnly } from "./expiry";
+import { parseCargos } from "./profile";
 
 // --- Participante ---------------------------------------------------------
 
@@ -168,6 +169,13 @@ export async function assignActivity(_prev: AssignState, formData: FormData): Pr
   const expira = String(formData.get("expira") ?? "").trim();
   // Solo lo que envía <input type="date">: un texto libre nunca vencería.
   if (expira && !isDateOnly(expira)) return { error: "La fecha de cierre no es válida." };
+  let cargos: string[] | null = null;
+  if (formData.get("askCargo") === "on") {
+    const parsed = parseCargos(String(formData.get("cargos") ?? ""));
+    if (!parsed.ok) return { error: parsed.error };
+    cargos = parsed.value;
+  }
+  const askPlace = formData.get("askPlace") === "on";
 
   const company = await one<{ name: string; archived: number }>(
     `SELECT name, EXISTS (SELECT 1 FROM company_archive WHERE company_id = companies.id) AS archived
@@ -188,6 +196,13 @@ export async function assignActivity(_prev: AssignState, formData: FormData): Pr
     `INSERT INTO activity_codes (code, mission_id, company_id, estado, expires_at) VALUES (?, ?, ?, 'activo', ?)`,
     [code, missionId, companyId, expira || null]
   );
+  if (cargos || askPlace) {
+    await run(
+      `INSERT INTO activity_code_profile (activity_code_id, cargos, ask_place)
+       SELECT id, ?, ? FROM activity_codes WHERE code = ?`,
+      [cargos ? JSON.stringify(cargos) : null, askPlace ? 1 : 0, code]
+    );
+  }
   await audit(`Actividad "${missionTitle}" asignada a ${company.name} con el código ${code}.`, user, companyId);
 
   revalidateCompany(companyId);

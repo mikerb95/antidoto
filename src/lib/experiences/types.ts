@@ -70,5 +70,6 @@ export interface PublicExperience {
   character: string;
   enter: string;
   badge: string;
+  minutes: string;
   risks: PublicRisk[];
 }
