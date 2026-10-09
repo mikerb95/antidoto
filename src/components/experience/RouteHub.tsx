@@ -59,6 +59,8 @@ export default function RouteHub(props: Props) {
   const single = stations.length === 1;
 
   function select(k: number) {
+    // Tocar la estación que ya está elegida entra a ella (con una sola estación, siempre lo está).
+    if (k === selected && prog.open[k] && !(paused && mode === "play")) return enter();
     setSelected(k);
     sceneSound().unlock();
     sceneSound().play("step");

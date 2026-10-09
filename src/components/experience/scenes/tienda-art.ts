@@ -1,6 +1,6 @@
 // Arte de la estación 5 de la Ruta del café: la tienda, donde el café llega a la taza.
 // La misma sala de Habbo de la trilladora, con la puerta abierta a la calle, paredes claras
-// y zócalo de madera. Adentro: el mesón del fondo con el lavaplatos y la regleta, el
+// y zócalo de madera. Adentro: el mesón del fondo con el lavaplatos y la licuadora, el
 // estante alto con los vasos, el tablero del menú, la barra con la vitrina, la caja, la
 // máquina de espresso y el molino. Todo por código.
 
@@ -67,18 +67,17 @@ export function drawRoom(buf: PixelBuffer) {
   }, C.outline);
 }
 
-// --- Mesón del fondo, lavaplatos y regleta ------------------------------------------
+// --- Mesón del fondo, lavaplatos y licuadora ------------------------------------------
 
 export const BACK = { i0: 1.0, i1: 7.4, j0: 0.08, j1: 0.8, h: 24 };
 export const SINK = { i0: 1.35, i1: 2.35 };
-export const STRIP = { i: 2.75, j: 0.5 };
+export const BLENDER = { i: 2.85, j: 0.42 };
+export const OUTLET = { i: 3.55, z: 33 };
 export const SHELF = { i0: 5.3, i1: 7.3, z: 58 };
 
 const WOOD: BoxColors = { top: C.stone, front: C.woodStore, side: C.woodStoreDark, line: C.outline };
 
 export interface BackState {
-  /** La regleta en el mesón mojado (con error) o en la pared (bien). */
-  stripWet: boolean;
   /** Cuchillo sumergido en el lavaplatos. */
   knife: boolean;
   t: number;
@@ -132,28 +131,34 @@ export function drawBackCounter(buf: PixelBuffer, s: BackState) {
   buf.rect(tap.x - 1, tap.y - 11, 6, 2, C.chrome);
   buf.px(tap.x + 4, tap.y - 9, C.water);
 
-  // Regleta: en el mesón mojado, pegada al lavaplatos (mal) o en la pared, en alto (bien).
-  const strip = s.stripWet ? P(STRIP.i, STRIP.j, top) : P(STRIP.i + 1.2, 0.02, 40);
-  if (s.stripWet) {
-    const pud = P(STRIP.i - 0.1, STRIP.j, top);
-    buf.shadow(pud.x, pud.y, 10, 3.5, C.water, 0.7);
-    for (let k = 0; k < 3; k++) buf.px(pud.x - 6 + k * 5, pud.y - 1 + (k % 2), C.waterLit);
+  // Licuadora de los granizados, conectada a la toma de la pared.
+  const bl = P(BLENDER.i, BLENDER.j, top);
+  buf.rect(bl.x - 5, bl.y - 7, 11, 8, C.outline);
+  buf.rect(bl.x - 4, bl.y - 6, 9, 6, hex("#3a3f45"));
+  buf.px(bl.x, bl.y - 4, hex("#e3452f"));
+  buf.rect(bl.x - 4, bl.y - 20, 9, 13, C.outline);
+  buf.rect(bl.x - 3, bl.y - 19, 7, 12, hex("#cfe6ee"));
+  buf.rect(bl.x - 3, bl.y - 12, 7, 5, hex("#e9dcc6"));
+  buf.rect(bl.x + 2, bl.y - 18, 1, 9, hex("#ffffff"));
+  buf.rect(bl.x - 5, bl.y - 22, 11, 3, C.outline);
+  buf.rect(bl.x - 4, bl.y - 21, 9, 1, hex("#3a3f45"));
+  const outlet = outletPoint();
+  buf.rect(outlet.x - 3, outlet.y - 4, 6, 8, C.outline);
+  buf.rect(outlet.x - 2, outlet.y - 3, 4, 6, C.plastic);
+  buf.rect(outlet.x - 1, outlet.y - 1, 2, 2, C.outline);
+  // El cable cuelga un poco entre la licuadora y la toma.
+  const a = { x: bl.x + 5, y: bl.y - 3 };
+  for (let k = 0; k < 12; k++) {
+    const t0 = k / 12;
+    const t1 = (k + 1) / 12;
+    const sag = (t: number) => Math.sin(t * Math.PI) * 4;
+    buf.line(a.x + (outlet.x - a.x) * t0, a.y + (outlet.y - a.y) * t0 + sag(t0), a.x + (outlet.x - a.x) * t1, a.y + (outlet.y - a.y) * t1 + sag(t1), C.outline);
   }
-  buf.rect(strip.x - 6, strip.y - 3, 13, 5, C.outline);
-  buf.rect(strip.x - 5, strip.y - 2, 11, 3, C.plastic);
-  for (const dx of [-3, 0, 3]) buf.px(strip.x + dx, strip.y - 1, C.outline);
-  buf.px(strip.x + 5, strip.y - 1, hex("#e3452f"));
-  // Cable a la toma de la pared.
-  const outlet = P(STRIP.i + 0.7, 0.02, 32);
-  buf.rect(outlet.x - 2, outlet.y - 3, 5, 6, C.plastic);
-  buf.line(strip.x + 6, strip.y - 1, outlet.x, outlet.y, C.outline);
-  if (s.stripWet) {
-    // Chispitas: el agua y la corriente no se juntan.
-    if (Math.floor(s.t * 6) % 3 === 0) {
-      buf.px(strip.x - 7, strip.y - 5, C.sign);
-      buf.px(strip.x - 8, strip.y - 6, hex("#ffffff"));
-    }
-  }
+}
+
+/** La toma de la pared, junto al lavaplatos, donde va la licuadora. */
+export function outletPoint(): Pt {
+  return P(OUTLET.i, 0.02, OUTLET.z);
 }
 
 /** Estante alto con vasos y tazas apiladas. */
@@ -172,10 +177,6 @@ export function drawShelf(buf: PixelBuffer, cupsLeft: number) {
 
 export function sinkCenter(): Pt {
   return P((SINK.i0 + SINK.i1) / 2, (BACK.j0 + BACK.j1) / 2, BACK.h);
-}
-
-export function stripPoint(wet: boolean): Pt {
-  return wet ? P(STRIP.i, STRIP.j, BACK.h + 1) : P(STRIP.i + 1.2, 0.02, 40);
 }
 
 // --- Barra ---------------------------------------------------------------------------
