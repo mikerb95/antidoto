@@ -653,19 +653,19 @@ export const RUTA_CAFE_TIENDA: ExperienceDef = {
     {
       id: "enchufe",
       category: "Eléctrico",
-      clue: "Mira la regleta que está junto al lavaplatos.",
+      clue: "Fíjate en las manos del compañero que enchufa la licuadora.",
       defaults: {
-        title: "Regleta mojada junto al lavaplatos",
-        prompt: "Mira la regleta al lado del lavaplatos. ¿Cuál es el problema?",
+        title: "Enchufar con las manos mojadas",
+        prompt: "El compañero viene del lavaplatos y enchufa la licuadora. ¿Qué está mal?",
         options: [
-          "Es blanca",
-          "Tiene tres enchufes conectados",
-          "Está en el mesón mojado, pegada al lavaplatos: el agua y la corriente no se juntan",
+          "Enchufa la licuadora antes de abrir la tienda",
+          "Usa la toma de la pared que está cerca del mesón",
+          "Tiene las manos mojadas y está tocando el enchufe",
         ],
         correct: 2,
         explanation:
-          "El agua conduce la corriente: una regleta mojada puede dar una descarga a quien la toque con las manos húmedas o hacer un cortocircuito. La Resolución 2400 de 1979 (art. 121) exige instalaciones eléctricas aisladas y protegidas, y OSHA recomienda no conectar equipos con las manos mojadas ni sobre superficies húmedas.",
-        practice: "Mantén regletas y enchufes lejos del agua, en la pared y en alto; sécate las manos antes de conectar y reporta cualquier cable mojado o dañado.",
+          "El agua conduce la corriente: con las manos mojadas, tocar un enchufe puede dar una descarga, y junto al lavaplatos el riesgo es mayor. La Resolución 2400 de 1979 (art. 121) exige instalaciones eléctricas aisladas y protegidas, y OSHA recomienda no conectar equipos con las manos mojadas ni sobre superficies húmedas.",
+        practice: "Sécate bien las manos antes de conectar o desconectar un equipo, tómalo de la clavija y no del cable, y reporta cualquier toma o cable mojado o dañado.",
       },
     },
     {
@@ -691,16 +691,16 @@ export const RUTA_CAFE_TIENDA: ExperienceDef = {
       category: "Mecánico",
       clue: "Mira dentro del lavaplatos.",
       defaults: {
-        title: "Cuchillo escondido en el lavaplatos",
+        title: "Cuchillo dentro del lavaplatos",
         prompt: "Mira dentro del lavaplatos. ¿Qué peligro hay?",
         options: [
           "El agua tiene jabón",
-          "Hay un cuchillo sumergido en el agua espumosa, donde nadie lo ve",
+          "Hay un cuchillo con la hoja metida en el agua, donde la mano no lo ve",
           "El lavaplatos es de acero",
         ],
         correct: 1,
         explanation:
-          "Bajo la espuma el cuchillo no se ve: quien meta la mano para lavar se corta. OSHA pide no dejar cuchillos ni objetos cortantes en el lavaplatos, y la Resolución 2400 de 1979 (art. 365) pide fundas o estuches para guardarlos cuando no se usan.",
+          "Bajo el agua la hoja no se ve: quien meta la mano para lavar se corta. OSHA pide no dejar cuchillos ni objetos cortantes en el lavaplatos, y la Resolución 2400 de 1979 (art. 365) pide fundas o estuches para guardarlos cuando no se usan.",
         practice: "Lava el cuchillo apenas lo uses, sécalo y guárdalo en su sitio. Nunca lo dejes en el agua ni lo agarres si se cae.",
       },
     },

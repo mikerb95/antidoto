@@ -824,7 +824,7 @@ export const REQUISITOS_FUNCIONALES: Modulo[] = [
         id: "RF-911",
         titulo: "Estación 5 de la ruta del café: la tienda (cierre de la ruta)",
         descripcion:
-          "Sara, barista, abre la tienda, prepara bebidas y atiende la hora pico en una sala de Habbo con barra, vitrina, caja, máquina de espresso, lavaplatos, estante alto y una fila de clientes. En tres momentos (abrir, preparar, atender) el participante encuentra siete riesgos: chanclas para trapear, piso mojado sin aviso, regleta mojada junto al lavaplatos, la mano bajo el vapor de la lanceta, un cuchillo escondido en el lavaplatos, subirse a un butaco y atender sola la hora pico con un cliente agresivo. Al final ve el trabajo bien hecho, gana la insignia Barista segura y cierra la Ruta del café.",
+          "Sara, barista, abre la tienda, prepara bebidas y atiende la hora pico en una sala de Habbo con barra, vitrina, caja, máquina de espresso, lavaplatos, estante alto y una fila de clientes. En tres momentos (abrir, preparar, atender) el participante encuentra siete riesgos: chanclas para trapear, piso mojado sin aviso, un compañero que enchufa la licuadora con las manos mojadas, la mano bajo el vapor de la lanceta, un cuchillo escondido en el lavaplatos, subirse a un butaco y atender sola la hora pico con un cliente agresivo. Al final ve el trabajo bien hecho, gana la insignia Barista segura y cierra la Ruta del café.",
         prioridad: "alta",
         estado: "implementado",
         origen:

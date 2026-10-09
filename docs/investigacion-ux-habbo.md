@@ -261,13 +261,18 @@ Investigado el 2026-09-24. Última de las cinco estaciones: el café llega a la 
 ### Escenario
 
 - La misma sala de Habbo, con la puerta abierta a la calle, paredes claras y zócalo de
-  madera. Al fondo, el mesón con el lavaplatos (agua con espuma) y la regleta; arriba, el
+  madera. Al fondo, el mesón con el lavaplatos (agua con espuma), la toma de la pared y la
+  licuadora de los granizados; arriba, el
   tablero del menú y el estante de vasos. Adelante, la barra con la caja, la vitrina de
   postres, el molino y la máquina de espresso con su lanceta de vapor.
 - Protagonista nueva: **Sara**, barista. En la hora pico llega una fila de cuatro clientes;
-  el primero grita (burbuja roja) y Sara suda. En la versión correcta la acompaña un
-  compañero en la caja.
-- Momentos: **abrir** (trapea del lado de los clientes, así se le ven los pies), **preparar**
+  el primero grita (burbuja roja) y Sara suda. Al abrir, un compañero sale del lavaplatos y
+  enchufa la licuadora con las manos mojadas; luego se va a su pausa y Sara queda sola. En
+  la versión correcta se seca las manos antes de enchufar y pasa a la caja.
+- En las tiendas de Juan Valdez no se usan regletas (2026-10-08): el riesgo eléctrico se
+  cuenta con una conducta (enchufar con las manos mojadas), no con un objeto.
+- Momentos: **abrir** (trapea del lado de los clientes, así se le ven los pies; el compañero
+  enchufa la licuadora junto al lavaplatos), **preparar**
   (cámara sobre la máquina y el lavaplatos) y **atender** (fila y butaco alto al final de
   la barra, a la vista).
 - El resumen de la última estación dice que se completó la ruta y la biblioteca ya no
@@ -279,7 +284,7 @@ Investigado el 2026-09-24. Última de las cinco estaciones: el café llega a la 
 | --- | --- | --- |
 | Chanclas para trapear | Locativo | Res. 2400 de 1979, art. 176 (protección según el riesgo); OSHA: resbalones y quemaduras entre las lesiones más comunes en restaurantes. |
 | Piso mojado sin aviso | Locativo | Res. 2400, art. 32 (piso no encharcado ni resbaladizo); OSHA: señalizar las zonas de piso mojado. |
-| Regleta mojada junto al lavaplatos | Eléctrico | Res. 2400, art. 121; OSHA: no conectar equipos con las manos mojadas ni sobre superficies húmedas. |
+| Enchufar con las manos mojadas | Eléctrico | Res. 2400, art. 121; OSHA: no conectar equipos con las manos mojadas ni sobre superficies húmedas. |
 | La mano bajo el vapor | Físico | OSHA: las máquinas de café y espresso causan quemaduras; Res. 2400, art. 177 (protección contra quemaduras). |
 | Cuchillo escondido en el lavaplatos | Mecánico | OSHA: no dejar cuchillos en el lavaplatos; Res. 2400, art. 365 (fundas para guardarlos). |
 | Se sube a un butaco | Locativo | Res. 2400, arts. 642 y 643 (escaleras portátiles en buen estado y con bases antirresbaladizas). |

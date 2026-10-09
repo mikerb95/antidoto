@@ -71,8 +71,8 @@ export function drawRoom(buf: PixelBuffer) {
 
 export const BACK = { i0: 1.0, i1: 7.4, j0: 0.08, j1: 0.8, h: 24 };
 export const SINK = { i0: 1.35, i1: 2.35 };
-export const BLENDER = { i: 2.85, j: 0.42 };
-export const OUTLET = { i: 3.55, z: 33 };
+export const BLENDER = { i: 4.45, j: 0.42 };
+export const OUTLET = { i: 2.95, z: 35 };
 export const SHELF = { i0: 5.3, i1: 7.3, z: 58 };
 
 const WOOD: BoxColors = { top: C.stone, front: C.woodStore, side: C.woodStoreDark, line: C.outline };
@@ -80,6 +80,8 @@ const WOOD: BoxColors = { top: C.stone, front: C.woodStore, side: C.woodStoreDar
 export interface BackState {
   /** Cuchillo sumergido en el lavaplatos. */
   knife: boolean;
+  /** Gotas en el mesón, del lavaplatos a la toma. */
+  drips: boolean;
   t: number;
 }
 
@@ -109,9 +111,11 @@ export function drawBackCounter(buf: PixelBuffer, s: BackState) {
       return [p.x, p.y];
     }),
     (x, y) => {
-      const n = (Math.floor(x) * 7 + Math.floor(y) * 3 + Math.floor(s.t * 2)) % 9;
-      if (n < 3) return C.foam;
-      return n < 5 ? C.waterLit : C.water;
+      // Espuma en burbujas sueltas sobre agua más oscura, para que la hoja del cuchillo
+      // resalte en vez de perderse entre el blanco.
+      const n = (Math.floor(x) * 7 + Math.floor(y) * 3 + Math.floor(s.t * 2)) % 11;
+      if (n === 0) return C.foam;
+      return n < 3 ? C.waterLit : n < 7 ? C.water : hex("#6ea7c1");
     },
   );
   for (let k = 0; k < 4; k++) {
@@ -119,77 +123,100 @@ export function drawBackCounter(buf: PixelBuffer, s: BackState) {
     const b = P(corners[(k + 1) % 4][0], corners[(k + 1) % 4][1], top);
     buf.line(a.x, a.y, b.x, b.y, C.chromeDark);
   }
-  if (s.knife) {
-    // Cuchillo de chef atravesado en la poceta: la hoja brilla bajo el agua y el mango
-    // de madera queda apoyado en el borde, sobre el mesón. Grande a propósito: tiene que
-    // leerse como cuchillo a primera vista.
-    const tip = P(SINK.i0 + 0.12, 0.5, top);
-    const guard = P(SINK.i1 - 0.02, 0.5, top + 1);
-    const butt = P(SINK.i1 + 0.42, 0.5, top + 2);
-    const blade = { c: hex("#eef2f4"), dark: hex("#8d969c") };
-    // Hoja: contorno, cuerpo de dos tonos y filo claro.
-    for (const dy of [-2, 2]) buf.line(tip.x, tip.y + dy, guard.x, guard.y + dy, C.outline);
-    buf.line(tip.x - 1, tip.y, tip.x - 1, tip.y, C.outline);
-    buf.line(tip.x, tip.y - 1, guard.x, guard.y - 1, blade.c);
-    buf.line(tip.x, tip.y, guard.x, guard.y, blade.c);
-    buf.line(tip.x, tip.y + 1, guard.x, guard.y + 1, blade.dark);
-    // Un poco de espuma encima de la hoja, sin taparla.
-    for (const f of [0.35, 0.62]) {
-      const p = { x: tip.x + (guard.x - tip.x) * f, y: tip.y + (guard.y - tip.y) * f };
-      buf.rect(p.x, p.y - 1, 2, 2, C.foam);
-    }
-    // Guarda metálica.
-    buf.rect(guard.x - 1, guard.y - 3, 3, 6, C.outline);
-    buf.rect(guard.x, guard.y - 2, 1, 4, C.chromeDark);
-    // Mango de madera con remaches.
-    for (const dy of [-2, 2]) buf.line(guard.x + 2, guard.y + dy, butt.x, butt.y + dy, C.outline);
-    buf.line(butt.x + 1, butt.y - 1, butt.x + 1, butt.y + 1, C.outline);
-    for (const dy of [-1, 0, 1]) buf.line(guard.x + 2, guard.y + dy, butt.x, butt.y + dy, dy < 1 ? C.woodStoreLit : C.woodStore);
-    for (const f of [0.3, 0.75]) {
-      const p = { x: guard.x + 2 + (butt.x - guard.x - 2) * f, y: guard.y + (butt.y - guard.y) * f };
-      buf.px(p.x, p.y, C.chrome);
-    }
-    // Destello que recorre la hoja cada poco: el ojo va solo hacia ahí.
-    const g = (s.t * 0.8) % 1.6;
-    if (g < 1) {
-      const p = { x: tip.x + (guard.x - tip.x) * g, y: tip.y + (guard.y - tip.y) * g };
-      buf.px(p.x, p.y - 1, C.steam);
-      buf.px(p.x + 1, p.y - 1, C.steam);
-      if (g > 0.15 && g < 0.3) {
-        buf.px(p.x, p.y - 3, C.steam);
-        buf.px(p.x, p.y + 1, C.steam);
-        buf.px(p.x - 2, p.y - 1, C.steam);
-        buf.px(p.x + 3, p.y - 1, C.steam);
-      }
-    }
-  }
+  if (s.knife) drawKnife(buf, P(SINK.i0 + 0.7, 0.52, top), s.t);
   const tap = P(SINK.i0 + 0.5, B.j0 + 0.05, top);
   buf.rect(tap.x - 1, tap.y - 10, 2, 10, C.chromeDark);
   buf.rect(tap.x - 1, tap.y - 11, 6, 2, C.chrome);
   buf.px(tap.x + 4, tap.y - 9, C.water);
 
-  // Licuadora de los granizados, conectada a la toma de la pared.
+  // Licuadora de los granizados: base oscura, vaso que se abre hacia arriba y tapa.
   const bl = P(BLENDER.i, BLENDER.j, top);
-  buf.rect(bl.x - 5, bl.y - 7, 11, 8, C.outline);
-  buf.rect(bl.x - 4, bl.y - 6, 9, 6, hex("#3a3f45"));
-  buf.px(bl.x, bl.y - 4, hex("#e3452f"));
-  buf.rect(bl.x - 4, bl.y - 20, 9, 13, C.outline);
-  buf.rect(bl.x - 3, bl.y - 19, 7, 12, hex("#cfe6ee"));
-  buf.rect(bl.x - 3, bl.y - 12, 7, 5, hex("#e9dcc6"));
-  buf.rect(bl.x + 2, bl.y - 18, 1, 9, hex("#ffffff"));
-  buf.rect(bl.x - 5, bl.y - 22, 11, 3, C.outline);
-  buf.rect(bl.x - 4, bl.y - 21, 9, 1, hex("#3a3f45"));
+  buf.shadow(bl.x, bl.y + 1, 6, 2, C.shadow, 0.3);
+  buf.rect(bl.x - 5, bl.y - 6, 11, 7, C.outline);
+  buf.rect(bl.x - 4, bl.y - 5, 9, 5, hex("#3a3f45"));
+  buf.rect(bl.x - 4, bl.y - 5, 9, 1, hex("#565d66"));
+  buf.px(bl.x + 2, bl.y - 3, hex("#e3452f"));
+  buf.poly([bl.x - 4, bl.y - 6, bl.x - 6, bl.y - 20, bl.x + 6, bl.y - 20, bl.x + 4, bl.y - 6], C.outline);
+  buf.poly([bl.x - 3, bl.y - 7, bl.x - 5, bl.y - 19, bl.x + 5, bl.y - 19, bl.x + 3, bl.y - 7], hex("#cfe6ee"));
+  buf.rect(bl.x - 3, bl.y - 11, 7, 4, hex("#e9dcc6"));
+  buf.rect(bl.x + 2, bl.y - 18, 1, 8, hex("#ffffff"));
+  buf.rect(bl.x - 6, bl.y - 22, 13, 3, C.outline);
+  buf.rect(bl.x - 5, bl.y - 21, 11, 1, hex("#3a3f45"));
   const outlet = outletPoint();
   buf.rect(outlet.x - 3, outlet.y - 4, 6, 8, C.outline);
   buf.rect(outlet.x - 2, outlet.y - 3, 4, 6, C.plastic);
   buf.rect(outlet.x - 1, outlet.y - 1, 2, 2, C.outline);
-  // El cable cuelga un poco entre la licuadora y la toma.
-  const a = { x: bl.x + 5, y: bl.y - 3 };
-  for (let k = 0; k < 12; k++) {
-    const t0 = k / 12;
-    const t1 = (k + 1) / 12;
-    const sag = (t: number) => Math.sin(t * Math.PI) * 4;
-    buf.line(a.x + (outlet.x - a.x) * t0, a.y + (outlet.y - a.y) * t0 + sag(t0), a.x + (outlet.x - a.x) * t1, a.y + (outlet.y - a.y) * t1 + sag(t1), C.outline);
+  // El cable va por el mesón hasta la pared y sube a la toma.
+  const foot = P(OUTLET.i + 0.25, 0.1, top);
+  buf.line(bl.x - 5, bl.y - 1, foot.x, foot.y, C.outline);
+  buf.line(foot.x, foot.y, outlet.x, outlet.y + 3, C.outline);
+  if (s.drips) {
+    // Rastro de gotas del lavaplatos a la toma: alguien pasó con las manos mojadas.
+    for (const [di, dj] of [[0.15, 0.55], [0.35, 0.62], [0.52, 0.5], [0.7, 0.6]]) {
+      const d = P(SINK.i1 + di, dj, top);
+      buf.rect(d.x - 1, d.y, 3, 1, C.water);
+      buf.px(d.x, d.y, C.waterLit);
+    }
+  }
+}
+
+/**
+ * Cuchillo de chef metido en la poceta: la punta bajo el agua y el mango asomando hacia
+ * arriba, inclinado. De pie se lee mucho mejor que acostado, que a esta resolución era
+ * apenas una raya. Se pinta por material (hoja, guarda, mango) y luego el contorno.
+ */
+function drawKnife(buf: PixelBuffer, tip: Pt, t: number) {
+  const d = { x: -0.45, y: -0.89 };
+  const n = { x: -d.y, y: d.x };
+  const BLADE = 12;
+  const GUARD = 13.5;
+  const LEN = 23;
+  const lit = hex("#f4f7f8");
+  const mid = hex("#b9c1c6");
+  const at = (x: number, y: number) => {
+    const rx = x + 0.5 - tip.x;
+    const ry = y + 0.5 - tip.y;
+    const u = rx * d.x + ry * d.y;
+    const v = rx * n.x + ry * n.y;
+    if (u >= 0 && u < BLADE) {
+      const w = Math.min(3.4, 0.7 + u * 0.4);
+      if (v >= -1 && v < -1 + w) return v < -1 + w / 2 ? lit : mid;
+    } else if (u >= BLADE && u < GUARD) {
+      if (v >= -2 && v < 2.6) return C.chromeDark;
+    } else if (u >= GUARD && u < LEN) {
+      if (v >= -0.8 && v < 1.8) {
+        if (Math.abs(v - 0.5) < 0.6 && (Math.abs(u - 16) < 0.6 || Math.abs(u - 20.5) < 0.6)) return C.chrome;
+        return v < 0.5 ? C.woodStoreLit : C.woodStore;
+      }
+    }
+    return CLEAR;
+  };
+  const x0 = Math.floor(tip.x - 16);
+  const y0 = Math.floor(tip.y - 26);
+  const W0 = 26;
+  const H0 = 30;
+  // Bajo esta línea la hoja está sumergida y se ve a través del agua.
+  const waterline = tip.y - 3;
+  for (let y = y0; y < y0 + H0; y++) {
+    for (let x = x0; x < x0 + W0; x++) {
+      let c = at(x, y);
+      if (!c && (at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1))) c = C.outline;
+      if (!c) continue;
+      buf.px(x, y, y > waterline ? mix(c, C.water, 0.45) : c);
+    }
+  }
+  // Destello en la parte de la hoja que queda fuera del agua: el ojo va solo hacia ahí.
+  const g = (t * 0.9) % 1.8;
+  if (g < 1) {
+    const u = 4.5 + g * 6.5;
+    const p = { x: Math.floor(tip.x + d.x * u + n.x * -0.2), y: Math.floor(tip.y + d.y * u + n.y * -0.2) };
+    buf.px(p.x, p.y, C.steam);
+    if (g > 0.4 && g < 0.6) {
+      buf.px(p.x - 2, p.y, C.steam);
+      buf.px(p.x + 2, p.y, C.steam);
+      buf.px(p.x, p.y - 2, C.steam);
+      buf.px(p.x, p.y + 2, C.steam);
+    }
   }
 }
 

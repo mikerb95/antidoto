@@ -85,7 +85,7 @@ const ANGRY = pose({ armN: 150, foreN: 170, armF: -6, foreF: 4, headTilt: -4 });
 const WAVE = pose({ armN: 140, foreN: 168, armF: -6, foreF: 4 });
 const AT_REGISTER = pose({ armN: 40, foreN: 80, armF: 30, foreF: 70 });
 /** El compañero mete el enchufe en la toma de la pared, con el brazo arriba. */
-const PLUG = pose({ lean: 6, armN: 120, foreN: 105, armF: 20, foreF: 50, headTilt: -8 });
+const PLUG = pose({ lean: 6, armN: 100, foreN: 90, armF: 20, foreF: 50, headTilt: -4 });
 
 // --- Lugares (baldosas) ------------------------------------------------------------
 
@@ -369,7 +369,7 @@ export class TiendaScene implements PlayScene {
     this.timeline.push(
       this.say("¡Buenos días! Trapeo rapidito antes de abrir."),
       wait(2),
-      this.say("Mi compañero sale del lavaplatos y enchufa la licuadora así, mojado."),
+      this.say("Mi compañero enchufa la licuadora con las manos mojadas: así es más rápido."),
       wait(2),
     );
     this.pushToBar(true);
@@ -469,7 +469,7 @@ export class TiendaScene implements PlayScene {
     this.sweat = this.sweat.filter((d) => d.life > 0);
     // Gotas de las manos mojadas del compañero, hasta el piso.
     if (this.plugging && !this.good && this.rigHelper && this.time > this.nextDrip) {
-      this.nextDrip = this.time + 0.35;
+      this.nextDrip = this.time + 0.22;
       const h = Math.random() < 0.5 ? this.rigHelper.handN : this.rigHelper.handF;
       this.drips.push({ x: h.x + (Math.random() - 0.5) * 2, y: h.y + 1, vy: 0, floor: this.coworker.y });
     }
@@ -500,7 +500,7 @@ export class TiendaScene implements PlayScene {
     out.data.set(this.room.data);
     if (!this.good || this.moment === 1) art.drawWetFloor(out, this.time);
     art.drawShelf(out, this.queue ? 1 : 4);
-    art.drawBackCounter(out, { knife: !this.good, t: this.time });
+    art.drawBackCounter(out, { knife: !this.good, drips: this.plugging && !this.good, t: this.time });
 
     // Detrás de la barra: el butaco o la escalera, Sara y el compañero.
     const behind = this.spotOf(this.sara).j < art.BAR.j0 + 0.2;
@@ -539,7 +539,7 @@ export class TiendaScene implements PlayScene {
     for (const it of items) it.draw();
 
     for (const d of this.drips) {
-      out.px(d.x, d.y, hex("#8fd3f5"));
+      out.rect(d.x, d.y - 1, 2, 2, hex("#8fd3f5"));
       out.px(d.x, d.y - 1, hex("#c9ecfb"));
     }
     for (const d of this.sweat) {
@@ -588,11 +588,20 @@ export class TiendaScene implements PlayScene {
     }
     this.rigHelper = drawAvatarLayers(out, actorPose(c), { ...this.barista, ...COWORKER_FACE }, c, {
       front: (rig) => {
+        if (this.plugging && !this.good) {
+          // Manos mojadas: brillan.
+          for (const h of [rig.handN, rig.handF]) {
+            out.px(h.x - 1, h.y - 1, hex("#c9ecfb"));
+            out.px(h.x + 1, h.y, hex("#8fd3f5"));
+          }
+        }
         if (this.plugging && this.good) {
-          // Ya se secó: la toalla en la otra mano.
-          const h = rig.handF;
-          out.rect(h.x - 2, h.y - 1, 4, 7, art.C.outline);
-          out.rect(h.x - 1, h.y, 2, 5, hex("#f4f1ea"));
+          // Ya se secó: la toalla al hombro.
+          const x = rig.shoulder.x - rig.facingUpper * 6;
+          const y = rig.shoulder.y;
+          out.rect(x - 3, y - 2, 6, 11, art.C.outline);
+          out.rect(x - 2, y - 1, 4, 9, hex("#f4f1ea"));
+          out.rect(x - 2, y + 5, 4, 1, hex("#e3452f"));
         }
       },
     });
