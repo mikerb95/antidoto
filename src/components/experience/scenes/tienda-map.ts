@@ -11,8 +11,8 @@ export const TIENDA_MOMENTS: { id: Moment; label: string; hint: string }[] = [
 
 /** Zona de la escena → riesgo, por momento. Una zona sin riesgo cae en TIENDA_OK. */
 export const TIENDA_RISK_ZONES: Record<Moment, Record<string, string>> = {
-  1: { pies: "chanclas", charco: "piso", regleta: "enchufe" },
-  2: { mano: "vapor", lanceta: "vapor", lavaplatos: "cuchillo", regleta: "enchufe" },
+  1: { pies: "chanclas", charco: "piso", manos: "enchufe", companero: "enchufe" },
+  2: { mano: "vapor", lanceta: "vapor", lavaplatos: "cuchillo" },
   3: { silla: "silla", sara: "silla", fila: "estres", cliente: "estres", charco: "piso" },
 };
 
@@ -27,12 +27,14 @@ export const TIENDA_OK: Record<string, string> = {
   sara: "Sara, la barista, alista la barra.",
   balde: "El balde con el agua de trapear.",
   estante: "El estante de los vasos y las tazas.",
+  licuadora: "La licuadora de los granizados, en su sitio.",
 };
 
 export const TIENDA_ZONE_LABELS: Record<string, string> = {
   pies: "Pies de Sara",
   charco: "Piso",
-  regleta: "Regleta",
+  manos: "Manos del compañero",
+  companero: "Compañero",
   mano: "Mano de Sara",
   lanceta: "Lanceta de vapor",
   lavaplatos: "Lavaplatos",
@@ -48,6 +50,7 @@ export const TIENDA_ZONE_LABELS: Record<string, string> = {
   extintor: "Extintor",
   balde: "Balde",
   estante: "Estante",
+  licuadora: "Licuadora",
 };
 
 export const TIENDA_MAP: SceneMap = {

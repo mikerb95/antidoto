@@ -120,11 +120,48 @@ export function drawBackCounter(buf: PixelBuffer, s: BackState) {
     buf.line(a.x, a.y, b.x, b.y, C.chromeDark);
   }
   if (s.knife) {
-    // Solo asoma el mango: la hoja está bajo la espuma.
-    const k1 = P(SINK.i0 + 0.55, B.j0 + 0.45, top + 1);
-    buf.rect(k1.x - 1, k1.y - 2, 5, 2, C.outline);
-    buf.rect(k1.x, k1.y - 2, 3, 1, hex("#2b2320"));
-    buf.px(k1.x - 2, k1.y - 1, C.chrome);
+    // Cuchillo de chef atravesado en la poceta: la hoja brilla bajo el agua y el mango
+    // de madera queda apoyado en el borde, sobre el mesón. Grande a propósito: tiene que
+    // leerse como cuchillo a primera vista.
+    const tip = P(SINK.i0 + 0.12, 0.5, top);
+    const guard = P(SINK.i1 - 0.02, 0.5, top + 1);
+    const butt = P(SINK.i1 + 0.42, 0.5, top + 2);
+    const blade = { c: hex("#eef2f4"), dark: hex("#8d969c") };
+    // Hoja: contorno, cuerpo de dos tonos y filo claro.
+    for (const dy of [-2, 2]) buf.line(tip.x, tip.y + dy, guard.x, guard.y + dy, C.outline);
+    buf.line(tip.x - 1, tip.y, tip.x - 1, tip.y, C.outline);
+    buf.line(tip.x, tip.y - 1, guard.x, guard.y - 1, blade.c);
+    buf.line(tip.x, tip.y, guard.x, guard.y, blade.c);
+    buf.line(tip.x, tip.y + 1, guard.x, guard.y + 1, blade.dark);
+    // Un poco de espuma encima de la hoja, sin taparla.
+    for (const f of [0.35, 0.62]) {
+      const p = { x: tip.x + (guard.x - tip.x) * f, y: tip.y + (guard.y - tip.y) * f };
+      buf.rect(p.x, p.y - 1, 2, 2, C.foam);
+    }
+    // Guarda metálica.
+    buf.rect(guard.x - 1, guard.y - 3, 3, 6, C.outline);
+    buf.rect(guard.x, guard.y - 2, 1, 4, C.chromeDark);
+    // Mango de madera con remaches.
+    for (const dy of [-2, 2]) buf.line(guard.x + 2, guard.y + dy, butt.x, butt.y + dy, C.outline);
+    buf.line(butt.x + 1, butt.y - 1, butt.x + 1, butt.y + 1, C.outline);
+    for (const dy of [-1, 0, 1]) buf.line(guard.x + 2, guard.y + dy, butt.x, butt.y + dy, dy < 1 ? C.woodStoreLit : C.woodStore);
+    for (const f of [0.3, 0.75]) {
+      const p = { x: guard.x + 2 + (butt.x - guard.x - 2) * f, y: guard.y + (butt.y - guard.y) * f };
+      buf.px(p.x, p.y, C.chrome);
+    }
+    // Destello que recorre la hoja cada poco: el ojo va solo hacia ahí.
+    const g = (s.t * 0.8) % 1.6;
+    if (g < 1) {
+      const p = { x: tip.x + (guard.x - tip.x) * g, y: tip.y + (guard.y - tip.y) * g };
+      buf.px(p.x, p.y - 1, C.steam);
+      buf.px(p.x + 1, p.y - 1, C.steam);
+      if (g > 0.15 && g < 0.3) {
+        buf.px(p.x, p.y - 3, C.steam);
+        buf.px(p.x, p.y + 1, C.steam);
+        buf.px(p.x - 2, p.y - 1, C.steam);
+        buf.px(p.x + 3, p.y - 1, C.steam);
+      }
+    }
   }
   const tap = P(SINK.i0 + 0.5, B.j0 + 0.05, top);
   buf.rect(tap.x - 1, tap.y - 10, 2, 10, C.chromeDark);

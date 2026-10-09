@@ -84,6 +84,8 @@ const REACH = pose({ armN: 162, foreN: 176, armF: 150, foreF: 168, headTilt: -14
 const ANGRY = pose({ armN: 150, foreN: 170, armF: -6, foreF: 4, headTilt: -4 });
 const WAVE = pose({ armN: 140, foreN: 168, armF: -6, foreF: 4 });
 const AT_REGISTER = pose({ armN: 40, foreN: 80, armF: 30, foreF: 70 });
+/** El compañero mete el enchufe en la toma de la pared, con el brazo arriba. */
+const PLUG = pose({ lean: 6, armN: 120, foreN: 105, armF: 20, foreF: 50, headTilt: -8 });
 
 // --- Lugares (baldosas) ------------------------------------------------------------
 
@@ -101,6 +103,14 @@ const QUEUE: Spot[] = [
   { i: 1.25, j: 5.85 },
 ];
 const SIGN: Spot = { i: 3.4, j: 4.3 };
+/** Frente a la toma de la pared, junto al lavaplatos. */
+const OUTLET_SPOT: Spot = { i: 2.95, j: 1.2 };
+/** Por donde sale el compañero a su pausa: rodea la caja y sale por la puerta. */
+const EXIT: Spot[] = [
+  { i: 0.45, j: 1.5 },
+  { i: 0.45, j: 4.4 },
+  { i: -0.3, j: 5.1 },
+];
 const BUCKET: Spot = { i: 5.9, j: 5.0 };
 
 const WIDE: Framing = { zoom: 1, cx: 200, cy: 125 };
@@ -114,6 +124,8 @@ export class TiendaScene implements PlayScene {
   private camera = new Camera(new PixelBuffer(art.W, art.H), WIDE);
 
   private timeline = new Timeline();
+  /** Lo que hace el compañero mientras Sara sigue con lo suyo. */
+  private side = new Timeline();
   private sara: Actor = { x: 0, y: 0, facing: -1, pose: MOP, expr: "normal", walking: false, walkPhase: 0, carrying: false };
   private coworker: Actor = { x: 0, y: 0, facing: 1, pose: AT_REGISTER, expr: "feliz", walking: false, walkPhase: 0, carrying: false };
   private customers: Actor[] = QUEUE.map(() => ({ x: 0, y: 0, facing: 1, pose: STAND, expr: "normal", walking: false, walkPhase: 0, carrying: false }));
@@ -127,14 +139,22 @@ export class TiendaScene implements PlayScene {
   private queue = false;
   /** Sara parada en el butaco (o en la escalera, en la versión correcta). */
   private raised = false;
+  /** El compañero está en la tienda. */
+  private helper = false;
+  /** El compañero está enchufando la licuadora. */
+  private plugging = false;
 
   private rig: Rig | null = null;
   private rigAngry: Rig | null = null;
+  private rigHelper: Rig | null = null;
   private time = 0;
   private dissolve: { t: number; apply: () => void; applied: boolean } | null = null;
   private ripples: { x: number; y: number; t: number }[] = [];
   private sweat: { x: number; y: number; vy: number; life: number }[] = [];
   private nextSweat = 0;
+  /** Gotas que le escurren de las manos al compañero. */
+  private drips: { x: number; y: number; vy: number; floor: number }[] = [];
+  private nextDrip = 0;
 
   moment: Moment = 1;
   found = new Set<string>();
@@ -166,12 +186,24 @@ export class TiendaScene implements PlayScene {
     this.steam = false;
     this.queue = false;
     this.raised = false;
+    this.helper = good;
+    this.plugging = false;
+    this.drips = [];
     Object.assign(this.sara, { walking: false, walkPhase: 0 });
     QUEUE.forEach((s, k) => {
       this.place(this.customers[k], s);
       Object.assign(this.customers[k], { facing: 1, pose: STAND, expr: "normal" });
     });
     this.place(this.coworker, REGISTER);
+    Object.assign(this.coworker, { facing: 1, pose: AT_REGISTER, expr: "feliz", walking: false, walkPhase: 0 });
+  }
+
+  /** El compañero, recién salido del lavaplatos, enchufa la licuadora. */
+  private atOutlet() {
+    this.helper = true;
+    this.plugging = true;
+    this.place(this.coworker, OUTLET_SPOT);
+    Object.assign(this.coworker, { facing: 1, pose: PLUG, expr: "normal" });
   }
 
   private applyMoment(m: Moment) {
@@ -180,6 +212,7 @@ export class TiendaScene implements PlayScene {
     const s = this.sara;
     if (m === 1) {
       this.mopping = true;
+      this.atOutlet();
       this.place(s, M1);
       Object.assign(s, { pose: MOP, expr: "normal", facing: -1 });
       this.camera.set(WIDE, true);
@@ -212,9 +245,9 @@ export class TiendaScene implements PlayScene {
   }
 
   setMoment(m: Moment): boolean {
-    if (this.mode !== "juego" || this.dissolve || this.timeline.busy) return false;
+    if (this.mode !== "juego" || this.dissolve || this.timeline.busy || this.side.busy) return false;
     if (m === this.moment) return true;
-    this.timeline.clear();
+    this.clearTimelines();
     if (m === this.moment + 1) {
       this.moment = m;
       if (m === 2) this.pushToBar(false);
@@ -235,7 +268,7 @@ export class TiendaScene implements PlayScene {
 
   skipIntro(onDone: () => void) {
     if (this.mode !== "intro") return;
-    this.timeline.clear();
+    this.clearTimelines();
     this.startDissolve(() => {
       this.mode = "juego";
       this.applyMoment(1);
@@ -244,11 +277,16 @@ export class TiendaScene implements PlayScene {
   }
 
   reset() {
-    this.timeline.clear();
+    this.clearTimelines();
     this.mode = "juego";
     this.hint = null;
     this.found = new Set();
     this.startDissolve(() => this.applyMoment(1));
+  }
+
+  private clearTimelines() {
+    this.timeline.clear();
+    this.side.clear();
   }
 
   private startDissolve(apply: () => void) {
@@ -256,7 +294,7 @@ export class TiendaScene implements PlayScene {
   }
 
   get busy() {
-    return this.mode !== "juego" || this.timeline.busy || this.dissolve !== null;
+    return this.mode !== "juego" || this.timeline.busy || this.side.busy || this.dissolve !== null;
   }
 
   private say(text: string): Step {
@@ -270,12 +308,26 @@ export class TiendaScene implements PlayScene {
 
   // --- Tramos -------------------------------------------------------------------------
 
-  /** Deja el trapero, rodea la barra y purga la lanceta (del momento 1 al 2). */
+  /**
+   * Deja el trapero, rodea la barra y purga la lanceta (del momento 1 al 2). Mientras,
+   * el compañero se va a su pausa (o, en la versión correcta, pasa a la caja).
+   */
   private pushToBar(story: boolean) {
     const s = this.sara;
+    const c = this.coworker;
     const speed = story ? 40 : 60;
+    const to = (p: Spot) => walkTo(c, art.P(p.i, p.j).x, art.P(p.i, p.j).y, speed);
     this.timeline.push(
-      act(() => (this.mopping = false)),
+      act(() => {
+        this.mopping = false;
+        this.plugging = false;
+        this.side.push(
+          poseTo(c, STAND, 0.25),
+          ...(this.good
+            ? [to(REGISTER), act(() => (c.facing = 1)), poseTo(c, AT_REGISTER, 0.3, "feliz")]
+            : [...EXIT.map(to), act(() => (this.helper = false))]),
+        );
+      }),
       poseTo(s, STAND, 0.25),
       this.walk(ROUND_A, speed),
       this.walk(ROUND_B, speed),
@@ -312,12 +364,12 @@ export class TiendaScene implements PlayScene {
 
   playIntro(onDone: () => void) {
     this.mode = "intro";
-    this.timeline.clear();
+    this.clearTimelines();
     this.applyMoment(1);
     this.timeline.push(
       this.say("¡Buenos días! Trapeo rapidito antes de abrir."),
       wait(2),
-      this.say("La regleta junto al lavaplatos... ya la seco después."),
+      this.say("Mi compañero sale del lavaplatos y enchufa la licuadora así, mojado."),
       wait(2),
     );
     this.pushToBar(true);
@@ -342,7 +394,7 @@ export class TiendaScene implements PlayScene {
   }
 
   playGoodPractice(onDone: () => void) {
-    this.timeline.clear();
+    this.clearTimelines();
     this.hint = null;
     const s = this.sara;
     this.startDissolve(() => {
@@ -350,12 +402,14 @@ export class TiendaScene implements PlayScene {
       this.applyMoment(1);
       this.prepare(true);
       this.mopping = true;
+      this.atOutlet();
+      this.coworker.expr = "feliz";
       this.place(s, M1);
       Object.assign(s, { pose: MOP, expr: "feliz", facing: -1 });
       this.timeline.push(
         this.say("1. Zapatos cerrados y antideslizantes, y el aviso de piso mojado."),
         wait(2.2),
-        this.say("2. La regleta va en la pared, lejos del agua."),
+        this.say("2. Mi compañero se seca las manos antes de enchufar la licuadora."),
         wait(2),
       );
       this.pushToBar(true);
@@ -392,12 +446,13 @@ export class TiendaScene implements PlayScene {
       this.dissolve.t += dt / 0.5;
       if (this.dissolve.t >= 0.5 && !this.dissolve.applied) {
         this.dissolve.applied = true;
-        this.timeline.clear();
+        this.clearTimelines();
         this.dissolve.apply();
       }
       if (this.dissolve.t >= 1) this.dissolve = null;
     } else {
       this.timeline.update(dt);
+      this.side.update(dt);
     }
     this.camera.update(dt);
     // Gotas de sudor: el afán de la hora pico.
@@ -412,6 +467,17 @@ export class TiendaScene implements PlayScene {
       d.life -= dt;
     }
     this.sweat = this.sweat.filter((d) => d.life > 0);
+    // Gotas de las manos mojadas del compañero, hasta el piso.
+    if (this.plugging && !this.good && this.rigHelper && this.time > this.nextDrip) {
+      this.nextDrip = this.time + 0.35;
+      const h = Math.random() < 0.5 ? this.rigHelper.handN : this.rigHelper.handF;
+      this.drips.push({ x: h.x + (Math.random() - 0.5) * 2, y: h.y + 1, vy: 0, floor: this.coworker.y });
+    }
+    for (const d of this.drips) {
+      d.vy += 120 * dt;
+      d.y += d.vy * dt;
+    }
+    this.drips = this.drips.filter((d) => d.y < d.floor);
     for (const r of this.ripples) r.t += dt / 0.4;
     this.ripples = this.ripples.filter((r) => r.t < 1);
   }
@@ -434,15 +500,16 @@ export class TiendaScene implements PlayScene {
     out.data.set(this.room.data);
     if (!this.good || this.moment === 1) art.drawWetFloor(out, this.time);
     art.drawShelf(out, this.queue ? 1 : 4);
-    art.drawBackCounter(out, { stripWet: !this.good, knife: !this.good, t: this.time });
+    art.drawBackCounter(out, { knife: !this.good, t: this.time });
 
     // Detrás de la barra: el butaco o la escalera, Sara y el compañero.
     const behind = this.spotOf(this.sara).j < art.BAR.j0 + 0.2;
+    const helperBehind = this.spotOf(this.coworker).j < art.BAR.j0 + 0.2;
     if (this.queue) {
       if (this.good) art.drawLadder(out, CHAIR.i, CHAIR.j);
       else art.drawChair(out, CHAIR.i, CHAIR.j);
     }
-    if (this.good && this.queue) drawAvatarLayers(out, AT_REGISTER, { ...this.barista, ...COWORKER_FACE }, this.coworker, {});
+    if (this.helper && helperBehind) this.drawHelper(out);
     if (behind) this.drawSara(out);
     art.drawBar(out, { t: this.time, steam: this.steam });
 
@@ -450,6 +517,7 @@ export class TiendaScene implements PlayScene {
     type Drawable = { depth: number; draw: () => void };
     const items: Drawable[] = [];
     if (!behind) items.push({ depth: this.depthOf(this.sara), draw: () => this.drawSara(out) });
+    if (this.helper && !helperBehind) items.push({ depth: this.depthOf(this.coworker), draw: () => this.drawHelper(out) });
     if (this.mopping) items.push({ depth: BUCKET.i + BUCKET.j, draw: () => art.drawBucket(out, BUCKET.i, BUCKET.j) });
     if (this.good && (this.mopping || this.moment === 1)) items.push({ depth: SIGN.i + SIGN.j, draw: () => art.drawWetSign(out, SIGN.i, SIGN.j) });
     if (this.queue) {
@@ -470,6 +538,10 @@ export class TiendaScene implements PlayScene {
     items.sort((a, b) => a.depth - b.depth);
     for (const it of items) it.draw();
 
+    for (const d of this.drips) {
+      out.px(d.x, d.y, hex("#8fd3f5"));
+      out.px(d.x, d.y - 1, hex("#c9ecfb"));
+    }
     for (const d of this.sweat) {
       out.px(d.x, d.y, hex("#8fd3f5"));
       out.px(d.x, d.y + 1, hex("#c9ecfb"));
@@ -507,6 +579,25 @@ export class TiendaScene implements PlayScene {
     });
   }
 
+  private drawHelper(out: PixelBuffer) {
+    const c = this.coworker;
+    out.shadow(c.x, c.y, 10, 3, finca.C.shadow, 0.3);
+    if (this.plugging && !this.good) {
+      // El charquito que va dejando con las manos mojadas.
+      out.shadow(c.x + 6, c.y + 1, 7, 2, art.C.wet, 0.6);
+    }
+    this.rigHelper = drawAvatarLayers(out, actorPose(c), { ...this.barista, ...COWORKER_FACE }, c, {
+      front: (rig) => {
+        if (this.plugging && this.good) {
+          // Ya se secó: la toalla en la otra mano.
+          const h = rig.handF;
+          out.rect(h.x - 2, h.y - 1, 4, 7, art.C.outline);
+          out.rect(h.x - 1, h.y, 2, 5, hex("#f4f1ea"));
+        }
+      },
+    });
+  }
+
   /** Encima de la cámara: señales de riesgo, la pista y el toque. */
   private drawOverlay(out: PixelBuffer) {
     if (this.mode === "juego" && !this.busy) {
@@ -539,7 +630,10 @@ export class TiendaScene implements PlayScene {
     if (m === 1) {
       if (rig) at("pies", { x: (rig.footN.x + rig.footF.x) / 2, y: (rig.footN.y + rig.footF.y) / 2 }, 7, -1);
       at("charco", art.wetCenter(), 14);
-      at("regleta", art.stripPoint(true), 7);
+      if (this.rigHelper) {
+        at("manos", this.rigHelper.handN, 6);
+        at("companero", { x: (this.rigHelper.hip.x + this.rigHelper.neck.x) / 2, y: (this.rigHelper.hip.y + this.rigHelper.neck.y) / 2 }, 7);
+      }
       if (torso) at("sara", torso, 7);
       at("balde", art.P(BUCKET.i, BUCKET.j, 6), 7);
     }
@@ -547,7 +641,6 @@ export class TiendaScene implements PlayScene {
       if (rig) at("mano", rig.handN, 5);
       at("lanceta", art.wandTip(), 5, 2);
       at("lavaplatos", art.sinkCenter(), 9);
-      at("regleta", art.stripPoint(true), 6);
     }
     if (m === 3) {
       at("silla", art.P(CHAIR.i + 0.25, CHAIR.j + 0.25, 30), 8);
@@ -564,6 +657,7 @@ export class TiendaScene implements PlayScene {
     at("estante", art.P((art.SHELF.i0 + art.SHELF.i1) / 2, 0.05, art.SHELF.z + 6), 9);
     at("puerta", art.P(0, 5.1, 30), 14);
     at("extintor", art.P(7.6, 0.02, 26), 6);
+    at("licuadora", art.P(art.BLENDER.i, art.BLENDER.j, art.BACK.h + 10), 6);
     // Solo lo que queda dentro del encuadre.
     return zones.filter((z) => z.x > 2 && z.x < art.W - 2 && z.y > 2 && z.y < art.H - 2);
   }
