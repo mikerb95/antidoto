@@ -1075,6 +1075,36 @@ export const ITERACIONES: Iteracion[] = [
     ],
   },
   {
+    id: "it-certificados",
+    fase: "Fase 7 · Certificados",
+    nombre: "Certificados de participación",
+    rango: "12 nov 2026",
+    ghSince: "2026-11-12",
+    ghUntil: "2026-11-13",
+    resumen:
+      "Las empresas pedían una constancia para quienes hacen las actividades. Ahora cada persona que termina una actividad tiene su certificado con la marca de la empresa, y se emiten desde la página de la empresa: todos juntos o uno por uno.",
+    historias: [
+      {
+        id: "AN-48",
+        titulo: "Como administrador, quiero emitir los certificados de participación de una actividad de mi empresa para entregárselos a quienes la terminaron",
+        tipo: "historia",
+        valor: "alto",
+        col: "aceptacion",
+        par: "IA",
+        fecha: "2026-11-12",
+        tags: ["certificados", "reportes", "marca"],
+        requisitos: ["RF-310"],
+        dod: [
+          ok("Un certificado por persona que terminó, en A4 horizontal, con logo y colores de la empresa."),
+          ok("Emitir todos en un solo PDF (uno por página) o uno solo."),
+          ok("Número de certificado estable y fecha en hora de Colombia, con pruebas."),
+          ok("El admin de empresa solo abre los de la suya; una empresa archivada no emite."),
+          pend("Revisión del texto y el diseño con Antídoto antes de entregar a un cliente."),
+        ],
+      },
+    ],
+  },
+  {
     id: "it-backlog",
     fase: "Backlog",
     nombre: "Pendientes del portal y las misiones",

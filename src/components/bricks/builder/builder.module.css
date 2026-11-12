@@ -756,6 +756,37 @@
     0 0 0 5.5px var(--ink);
 }
 
+/* Todos los colores: familias en dos columnas, con tope de altura para no tapar el tablero. */
+.colorGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 0;
+  max-height: 34vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-top: 4px;
+  animation: colorsIn 260ms var(--ease-out);
+}
+
+.colorGrid .colorRow {
+  margin-top: 0;
+}
+
+.colorGrid .swatches {
+  flex-wrap: wrap;
+  overflow: visible;
+  padding-inline: 6px 0;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+@keyframes colorsIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 .colorFoot {
   display: flex;
   align-items: center;
@@ -1040,6 +1071,16 @@
     margin: 8px 0 0;
   }
 
+  .colorGrid {
+    grid-template-columns: 1fr;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .colorGrid .swatches {
+    padding-inline: 0;
+  }
+
   .colorFoot {
     padding: 6px 0 0;
   }
@@ -1121,6 +1162,7 @@
   .badge,
   .partSkeleton,
   .parts,
+  .colorGrid,
   .actions > *,
   .help,
   .helpBackdrop {

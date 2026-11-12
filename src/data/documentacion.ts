@@ -326,6 +326,19 @@ export const REQUISITOS_FUNCIONALES: Modulo[] = [
         relacionados: ["RF-307", "RF-913"],
       },
       {
+        id: "RF-310",
+        titulo: "Certificados de participación por empresa",
+        descripcion:
+          "Cada persona que termina una actividad tiene un certificado de participación con la marca de su empresa: una hoja A4 horizontal con su nombre, la actividad, la fecha en que terminó y un número propio. Se emiten todos juntos (uno por página) o uno solo, listos para imprimir o guardar como PDF.",
+        prioridad: "media",
+        estado: "implementado",
+        origen:
+          "src/app/admin/reporte/certificados/[id]/[companyId]/page.tsx, src/components/report/CertificateSheet.tsx, src/lib/certificate.ts, listCertificates en src/lib/queries.ts",
+        notas:
+          "Se abre desde la página de la empresa (botón Certificados, visible cuando alguien terminó) y desde los resultados de la actividad. El admin de empresa solo emite los de la suya. No guarda nada: el número sale del id de la participación (hash, no reversible), así que es el mismo cada vez que se reimprime. Los juegos en vivo no emiten certificado porque se juegan con apodo.",
+        relacionados: ["RF-308", "RF-303", "RF-307"],
+      },
+      {
         id: "RF-304",
         titulo: "Edición de textos legales",
         descripcion: "El superadmin edita la política de datos y los términos; la landing muestra la versión nueva al instante.",
