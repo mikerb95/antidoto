@@ -22,15 +22,50 @@ import LeaveConfirm from "@/components/LeaveConfirm";
 import styles from "./builder.module.css";
 
 const CATEGORIES: { name: string; parts: string[] }[] = [
-  { name: "Ladrillos", parts: ["ladrillo-1x1", "ladrillo-1x2", "ladrillo-1x4", "ladrillo-2x2", "ladrillo-2x4", "ladrillo-2x6"] },
-  { name: "Placas", parts: ["placa-1x2", "placa-2x2", "placa-2x4", "placa-4x4"] },
+  {
+    name: "Ladrillos",
+    parts: [
+      "ladrillo-1x1",
+      "ladrillo-1x2",
+      "ladrillo-1x4",
+      "ladrillo-2x2",
+      "ladrillo-2x4",
+      "ladrillo-2x6",
+    ],
+  },
+  {
+    name: "Placas",
+    parts: ["placa-1x2", "placa-2x2", "placa-2x4", "placa-4x4"],
+  },
   { name: "Tejas", parts: ["teja-1x1", "teja-1x2", "teja-2x2", "teja-1x4"] },
-  { name: "Inclinadas", parts: ["inclinada-1x2", "inclinada-2x2", "inclinada-4x2", "inclinada-2x3"] },
-  { name: "Redondas", parts: ["ladrillo-redondo-1x1", "placa-redonda-1x1", "ladrillo-redondo-2x2", "cilindro-2x2"] },
-  { name: "Ventanas", parts: ["ventana-1x2x3", "ventana-1x4x3", "puerta-1x4x6"] },
+  {
+    name: "Inclinadas",
+    parts: ["inclinada-1x2", "inclinada-2x2", "inclinada-4x2", "inclinada-2x3"],
+  },
+  {
+    name: "Redondas",
+    parts: [
+      "ladrillo-redondo-1x1",
+      "placa-redonda-1x1",
+      "ladrillo-redondo-2x2",
+      "cilindro-2x2",
+    ],
+  },
+  {
+    name: "Ventanas",
+    parts: ["ventana-1x2x3", "ventana-1x4x3", "puerta-1x4x6"],
+  },
 ];
 const TRAY_IDS = CATEGORIES.flatMap((c) => c.parts.map((k) => partByKey(k).id));
-const FAMILIES: BrickFamily[] = ["Neutros", "Azules", "Cálidos", "Rosas", "Verdes", "Tierras", "Especiales"];
+const FAMILIES: BrickFamily[] = [
+  "Neutros",
+  "Azules",
+  "Cálidos",
+  "Rosas",
+  "Verdes",
+  "Tierras",
+  "Especiales",
+];
 const FREE_BASE = 24;
 const GUIDE_KEY = "antidoto-ladrillos-guia";
 
@@ -52,7 +87,17 @@ function shortName(name: string): string {
 
 function starter(base: number): Brick[] {
   // La base no arranca vacía: una pieza puesta invita a poner la siguiente encima.
-  return [{ id: "inicio", part: partByKey("ladrillo-2x4").id, color: BRICK_COLORS.findIndex((c) => c.name === "Rojo brillante"), x: base / 2 - 2, y: 0, z: base / 2 - 1, rot: 0 }];
+  return [
+    {
+      id: "inicio",
+      part: partByKey("ladrillo-2x4").id,
+      color: BRICK_COLORS.findIndex((c) => c.name === "Rojo brillante"),
+      x: base / 2 - 2,
+      y: 0,
+      z: base / 2 - 1,
+      rot: 0,
+    },
+  ];
 }
 
 export interface BuilderProps {
@@ -82,20 +127,41 @@ function initialBricks({ challenge, initial, team }: BuilderProps): Brick[] {
 export default function Builder(props: BuilderProps) {
   const { title, exitHref, exitAction, challenge, session, team } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [engine] = useState(() => new BuilderEngine(team?.session.base ?? challenge?.base ?? FREE_BASE, initialBricks(props)));
-  const [introOpen, setIntroOpen] = useState(() => !!challenge && !session?.started);
-  const [teamStatus, setTeamStatus] = useState(() => team?.session.status ?? null);
+  const [engine] = useState(
+    () =>
+      new BuilderEngine(
+        team?.session.base ?? challenge?.base ?? FREE_BASE,
+        initialBricks(props),
+      ),
+  );
+  const [introOpen, setIntroOpen] = useState(
+    () => !!challenge && !session?.started,
+  );
+  const [teamStatus, setTeamStatus] = useState(
+    () => team?.session.status ?? null,
+  );
   // En equipo, la guía y las pistas esperan a que el anfitrión dé la señal.
-  const waiting = introOpen || (teamStatus !== null && teamStatus !== "building");
+  const waiting =
+    introOpen || (teamStatus !== null && teamStatus !== "building");
   const limit = team ? team.session.maxPieces : (challenge?.maxPieces ?? null);
   const [tier] = useState<Tier>(chooseTier);
-  const snap = useSyncExternalStore(engine.subscribe, engine.getSnapshot, engine.getSnapshot);
+  const snap = useSyncExternalStore(
+    engine.subscribe,
+    engine.getSnapshot,
+    engine.getSnapshot,
+  );
   const sound = brickSound();
-  const muted = useSyncExternalStore(sound.subscribe, sound.getMuted, () => false);
+  const muted = useSyncExternalStore(
+    sound.subscribe,
+    sound.getMuted,
+    () => false,
+  );
   const [category, setCategory] = useState(0);
   const [allColors, setAllColors] = useState(false);
   const [help, setHelp] = useState(false);
-  const [guideDone, setGuideDone] = useState(() => localStorage.getItem(GUIDE_KEY) === "listo");
+  const [guideDone, setGuideDone] = useState(
+    () => localStorage.getItem(GUIDE_KEY) === "listo",
+  );
   const [undoTipOver, setUndoTipOver] = useState(false);
   /** Cuántas piezas se habían puesto cuando venció el plazo de inactividad. */
   const [idleAt, setIdleAt] = useState<number | null>(null);
@@ -106,7 +172,9 @@ export default function Builder(props: BuilderProps) {
     engine.setTrayParts(TRAY_IDS);
     engine.setLimit(limit);
     const parent = canvas.parentElement!;
-    const ro = new ResizeObserver(() => engine.resize(parent.clientWidth, parent.clientHeight));
+    const ro = new ResizeObserver(() =>
+      engine.resize(parent.clientWidth, parent.clientHeight),
+    );
     ro.observe(parent);
     engine.resize(parent.clientWidth, parent.clientHeight);
     return () => {
@@ -118,7 +186,13 @@ export default function Builder(props: BuilderProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT")
+      )
+        return;
       // Con una ventana del reto abierta, el teclado es de la ventana.
       if (document.querySelector("[role=dialog], [role=alertdialog]")) return;
       if (e.key === "?") {
@@ -133,7 +207,16 @@ export default function Builder(props: BuilderProps) {
 
   // Primer minuto guiado (investigación, 3.7): colocar, girar la cámara, deshacer. Se aprende
   // haciendo; cada paso se cumple con la acción misma.
-  const step = guideDone || waiting ? null : snap.placed === 0 ? 0 : snap.orbits === 0 ? 1 : snap.undos === 0 && !undoTipOver ? 2 : null;
+  const step =
+    guideDone || waiting
+      ? null
+      : snap.placed === 0
+        ? 0
+        : snap.orbits === 0
+          ? 1
+          : snap.undos === 0 && !undoTipOver
+            ? 2
+            : null;
   useEffect(() => {
     if (step !== 2) return;
     const id = setTimeout(() => setUndoTipOver(true), 7000);
@@ -149,7 +232,13 @@ export default function Builder(props: BuilderProps) {
     const id = setTimeout(() => setIdleAt(placed), 20000);
     return () => clearTimeout(id);
   }, [snap.placed]);
-  const idleHint = step === null && !waiting && !team && idleAt === snap.placed && snap.count < 5 && !challenge?.model;
+  const idleHint =
+    step === null &&
+    !waiting &&
+    !team &&
+    idleAt === snap.placed &&
+    snap.count < 5 &&
+    !challenge?.model;
 
   const takePhoto = () => {
     const url = engine.photo();
@@ -163,7 +252,9 @@ export default function Builder(props: BuilderProps) {
   const color = snap.color;
   const sel = snap.selection;
   const handPart = snap.hand?.part ?? null;
-  const essentials = BRICK_COLORS.map((c, i) => ({ ...c, i })).filter((c) => c.essential);
+  const essentials = BRICK_COLORS.map((c, i) => ({ ...c, i })).filter(
+    (c) => c.essential,
+  );
 
   return (
     <div className={styles.root}>
@@ -173,14 +264,23 @@ export default function Builder(props: BuilderProps) {
             action={exitAction}
             className={styles.iconBtn}
             title="¿Salir de la actividad?"
-            body={<p style={{ margin: 0 }}>{props.exitNote ?? "Lo que llevas construido queda guardado. Este dispositivo olvidará tu sesión: para volver, entra con tu mismo nombre y código."}</p>}
+            body={
+              <p style={{ margin: 0 }}>
+                {props.exitNote ??
+                  "Lo que llevas construido queda guardado. Este dispositivo olvidará tu sesión: para volver, entra con tu mismo nombre y código."}
+              </p>
+            }
             confirmLabel="Salir"
           >
             <Icon name="back" />
             <span className={styles.srOnly}>Salir</span>
           </LeaveConfirm>
         ) : (
-          <Link href={exitHref ?? "/admin/biblioteca"} className={styles.iconBtn} aria-label="Salir">
+          <Link
+            href={exitHref ?? "/admin/biblioteca"}
+            className={styles.iconBtn}
+            aria-label="Salir"
+          >
             <Icon name="back" />
           </Link>
         )}
@@ -189,7 +289,10 @@ export default function Builder(props: BuilderProps) {
           <h1 className={styles.title}>{title}</h1>
         </div>
         {snap.limit !== null ? (
-          <span className={`${styles.count} ${styles.countBudget} ${snap.count >= snap.limit ? styles.countFull : ""}`} aria-label={`${snap.count} de ${snap.limit} piezas`}>
+          <span
+            className={`${styles.count} ${styles.countBudget} ${snap.count >= snap.limit ? styles.countFull : ""}`}
+            aria-label={`${snap.count} de ${snap.limit} piezas`}
+          >
             {snap.count}/{snap.limit} piezas
           </span>
         ) : (
@@ -198,41 +301,86 @@ export default function Builder(props: BuilderProps) {
           </span>
         )}
         {!challenge && !team && (
-          <button type="button" className={styles.iconBtn} aria-label="Descargar foto de la obra" onClick={takePhoto}>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            aria-label="Descargar foto de la obra"
+            onClick={takePhoto}
+          >
             <Icon name="camera" />
           </button>
         )}
-        <button type="button" className={styles.iconBtn} aria-label="Ayuda y controles" onClick={() => setHelp(true)}>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          aria-label="Ayuda y controles"
+          onClick={() => setHelp(true)}
+        >
           <Icon name="help" />
         </button>
-        <button type="button" className={styles.iconBtn} aria-label={muted ? "Activar sonido" : "Silenciar"} aria-pressed={muted} onClick={() => sound.setMuted(!muted)}>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          aria-label={muted ? "Activar sonido" : "Silenciar"}
+          aria-pressed={muted}
+          onClick={() => sound.setMuted(!muted)}
+        >
           <Icon name={muted ? "mute" : "sound"} />
         </button>
       </header>
 
       <div className={styles.stage}>
         <canvas ref={canvasRef} className={styles.canvas} />
-        <button type="button" className={`${styles.iconBtn} ${styles.frame}`} aria-label="Centrar la vista" onClick={() => engine.frameAll()} data-builder-ui>
+        <button
+          type="button"
+          className={`${styles.iconBtn} ${styles.frame}`}
+          aria-label="Centrar la vista"
+          onClick={() => engine.frameAll()}
+          data-builder-ui
+        >
           <Icon name="target" />
         </button>
 
         {challenge && session && (
-          <ChallengeLayer engine={engine} snap={snap} challenge={challenge} session={session} introOpen={introOpen} onIntroClose={() => setIntroOpen(false)} />
+          <ChallengeLayer
+            engine={engine}
+            snap={snap}
+            challenge={challenge}
+            session={session}
+            introOpen={introOpen}
+            onIntroClose={() => setIntroOpen(false)}
+          />
         )}
 
-        {team && <TeamLayer engine={engine} snap={snap} view={team} onStatus={setTeamStatus} />}
+        {team && (
+          <TeamLayer
+            engine={engine}
+            snap={snap}
+            view={team}
+            onStatus={setTeamStatus}
+          />
+        )}
 
         {step !== null && (
-          <div className={`${styles.coach} ${challenge || team ? styles.coachLow : ""}`} role="status">
+          <div
+            className={`${styles.coach} ${challenge || team ? styles.coachLow : ""}`}
+            role="status"
+          >
             <span className={styles.coachStep}>{step + 1}/3</span>
             {step === 0 && "Arrastra una pieza de la bandeja hasta la base"}
             {step === 1 && "Arrastra en un espacio vacío para girar la vista"}
             {step === 2 && (
               <>
-                ¿Te equivocaste? Toca <Icon name="undo" size={16} /> para deshacer
+                ¿Te equivocaste? Toca <Icon name="undo" size={16} /> para
+                deshacer
               </>
             )}
-            <button type="button" className={styles.coachSkip} onClick={() => setGuideDone(true)} data-builder-ui>
+            <button
+              type="button"
+              className={styles.coachSkip}
+              onClick={() => setGuideDone(true)}
+              data-builder-ui
+            >
               Saltar
             </button>
             {step === 0 && <span className={styles.hand} aria-hidden="true" />}
@@ -240,12 +388,16 @@ export default function Builder(props: BuilderProps) {
         )}
 
         {idleHint && (
-          <div className={`${styles.coach} ${challenge ? styles.coachLow : ""}`} role="status">
+          <div
+            className={`${styles.coach} ${challenge ? styles.coachLow : ""}`}
+            role="status"
+          >
             {snap.count <= 1 ? (
               "Prueba poner una pieza encima de la que ya está"
             ) : (
               <span>
-                Prueba girar una pieza con <Icon name="rotate" size={16} /> antes de ponerla
+                Prueba girar una pieza con <Icon name="rotate" size={16} />{" "}
+                antes de ponerla
               </span>
             )}
           </div>
@@ -254,18 +406,28 @@ export default function Builder(props: BuilderProps) {
         <div className={styles.badges} aria-hidden="true">
           {snap.ghost && !snap.ghost.ok && (
             <span className={`${styles.badge} ${styles.badgeWarn}`}>
-              <Icon name="block" size={16} /> {snap.ghost.problem === "ocupado" ? "Ahí ya hay una pieza" : snap.ghost.problem === "parcela" ? "Fuera de tu franja" : "Necesita apoyarse en algo"}
+              <Icon name="block" size={16} />{" "}
+              {snap.ghost.problem === "ocupado"
+                ? "Ahí ya hay una pieza"
+                : snap.ghost.problem === "parcela"
+                  ? "Fuera de tu franja"
+                  : "Necesita apoyarse en algo"}
             </span>
           )}
           {snap.floating > 0 && (
             <span className={styles.badge}>
-              <i className={styles.dot} /> {snap.floating} {snap.floating === 1 ? "pieza suelta" : "piezas sueltas"}
+              <i className={styles.dot} /> {snap.floating}{" "}
+              {snap.floating === 1 ? "pieza suelta" : "piezas sueltas"}
             </span>
           )}
         </div>
 
         {snap.notice && (
-          <div key={snap.notice.id} className={`${styles.toast} ${snap.notice.undo ? styles.toastLong : ""}`} data-builder-ui>
+          <div
+            key={snap.notice.id}
+            className={`${styles.toast} ${snap.notice.undo ? styles.toastLong : ""}`}
+            data-builder-ui
+          >
             <span>{snap.notice.text}</span>
             {snap.notice.undo && (
               <button type="button" onClick={() => engine.undo()}>
@@ -277,58 +439,128 @@ export default function Builder(props: BuilderProps) {
       </div>
 
       {/* La llave cambia con el modo: los botones vuelven a entrar con su animación. */}
-      <div key={sel && !snap.hand ? "seleccion" : "mano"} className={styles.actions} data-builder-ui>
+      <div
+        key={sel && !snap.hand ? "seleccion" : "mano"}
+        className={styles.actions}
+        data-builder-ui
+      >
         {sel && !snap.hand ? (
           <>
-            <button type="button" className={styles.action} onClick={() => engine.rotate()}>
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.rotate()}
+            >
               <Icon name="rotate" />
               <span>Girar</span>
             </button>
-            <button type="button" className={styles.action} onClick={() => engine.setColor(color)} disabled={sel.color === color}>
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.setColor(color)}
+              disabled={sel.color === color}
+            >
               <Icon name="paint" />
               <span>Pintar</span>
             </button>
-            <button type="button" className={styles.action} onClick={() => engine.moveSelection()}>
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.moveSelection()}
+            >
               <Icon name="move" />
               <span>Mover</span>
             </button>
-            <button type="button" className={styles.action} onClick={() => engine.duplicateSelection()}>
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.duplicateSelection()}
+            >
               <Icon name="copy" />
               <span>Duplicar</span>
             </button>
-            <button type="button" className={`${styles.action} ${styles.danger}`} onClick={() => engine.deleteSelection()}>
+            <button
+              type="button"
+              className={`${styles.action} ${styles.danger}`}
+              onClick={() => engine.deleteSelection()}
+            >
               <Icon name="trash" />
               <span>Eliminar</span>
             </button>
-            <button type="button" className={styles.action} onClick={() => engine.cancel()} aria-label="Quitar selección">
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.cancel()}
+              aria-label="Quitar selección"
+            >
               <Icon name="close" />
             </button>
           </>
         ) : (
           <>
-            <button type="button" className={styles.action} onClick={() => engine.undo()} disabled={!snap.canUndo} aria-label="Deshacer">
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.undo()}
+              disabled={!snap.canUndo}
+              aria-label="Deshacer"
+            >
               <Icon name="undo" />
             </button>
-            <button type="button" className={styles.action} onClick={() => engine.rotate()} disabled={!snap.hand} aria-label="Girar la pieza">
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.rotate()}
+              disabled={!snap.hand}
+              aria-label="Girar la pieza"
+            >
               <Icon name="rotate" />
             </button>
-            <button type="button" className={styles.place} onClick={() => engine.place()} disabled={!snap.hand} aria-disabled={!snap.ghost?.ok || !!snap.readOnly}>
+            <button
+              type="button"
+              className={styles.place}
+              onClick={() => engine.place()}
+              disabled={!snap.hand}
+              aria-disabled={!snap.ghost?.ok || !!snap.readOnly}
+            >
               {snap.moving ? "Soltar aquí" : "Colocar"}
             </button>
-            <button type="button" className={styles.action} onClick={() => engine.redo()} disabled={!snap.canRedo} aria-label="Rehacer">
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.redo()}
+              disabled={!snap.canRedo}
+              aria-label="Rehacer"
+            >
               <Icon name="redo" />
             </button>
-            <button type="button" className={styles.action} onClick={() => engine.clearHand()} disabled={!snap.hand} aria-label="Soltar la pieza en mano">
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => engine.clearHand()}
+              disabled={!snap.hand}
+              aria-label="Soltar la pieza en mano"
+            >
               <Icon name="close" />
             </button>
           </>
         )}
       </div>
 
-      <aside className={styles.tray} data-builder-ui aria-label="Piezas y colores">
+      <aside
+        className={styles.tray}
+        data-builder-ui
+        aria-label="Piezas y colores"
+      >
         <div className={styles.tabs} role="tablist">
           {CATEGORIES.map((c, i) => (
-            <button key={c.name} type="button" role="tab" aria-selected={category === i} onClick={() => setCategory(i)}>
+            <button
+              key={c.name}
+              type="button"
+              role="tab"
+              aria-selected={category === i}
+              onClick={() => setCategory(i)}
+            >
               {c.name}
             </button>
           ))}
@@ -355,7 +587,11 @@ export default function Builder(props: BuilderProps) {
               >
                 {/* Data URL dibujada en el navegador: next/image no aporta nada aquí. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {thumb ? <img src={thumb} alt="" draggable={false} /> : <span className={styles.partSkeleton} />}
+                {thumb ? (
+                  <img src={thumb} alt="" draggable={false} />
+                ) : (
+                  <span className={styles.partSkeleton} />
+                )}
                 <span className={styles.partName}>{shortName(p.name)}</span>
               </button>
             );
@@ -363,28 +599,40 @@ export default function Builder(props: BuilderProps) {
         </div>
 
         <div className={styles.colors}>
-          {(allColors ? FAMILIES : [null]).map((family) => (
-            <div key={family ?? "esenciales"} className={styles.colorRow}>
-              {family && <p className={styles.family}>{family}</p>}
-              <div className={styles.swatches}>
-                {(family ? BRICK_COLORS.map((c, i) => ({ ...c, i })).filter((c) => c.family === family) : essentials).map((c) => (
-                  <button
-                    key={c.i}
-                    type="button"
-                    className={`${styles.swatch} ${c.finish === "trans" ? styles.trans : ""} ${c.finish === "metal" ? styles.metal : ""}`}
-                    style={{ "--c": c.hex } as React.CSSProperties}
-                    aria-label={`${c.name}, familia ${c.family}`}
-                    aria-pressed={color === c.i}
-                    title={c.name}
-                    onClick={() => engine.setColor(c.i)}
-                  />
-                ))}
+          <div className={allColors ? styles.colorGrid : undefined}>
+            {(allColors ? FAMILIES : [null]).map((family) => (
+              <div key={family ?? "esenciales"} className={styles.colorRow}>
+                {family && <p className={styles.family}>{family}</p>}
+                <div className={styles.swatches}>
+                  {(family
+                    ? BRICK_COLORS.map((c, i) => ({ ...c, i })).filter(
+                        (c) => c.family === family,
+                      )
+                    : essentials
+                  ).map((c) => (
+                    <button
+                      key={c.i}
+                      type="button"
+                      className={`${styles.swatch} ${c.finish === "trans" ? styles.trans : ""} ${c.finish === "metal" ? styles.metal : ""}`}
+                      style={{ "--c": c.hex } as React.CSSProperties}
+                      aria-label={`${c.name}, familia ${c.family}`}
+                      aria-pressed={color === c.i}
+                      title={c.name}
+                      onClick={() => engine.setColor(c.i)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
           <div className={styles.colorFoot}>
             <span className={styles.colorName}>{BRICK_COLORS[color].name}</span>
-            <button type="button" className={styles.more} onClick={() => setAllColors((a) => !a)} aria-expanded={allColors}>
+            <button
+              type="button"
+              className={styles.more}
+              onClick={() => setAllColors((a) => !a)}
+              aria-expanded={allColors}
+            >
               {allColors ? "Menos colores" : "Todos los colores"}
               <Icon name="chevron" size={16} />
             </button>
@@ -396,18 +644,53 @@ export default function Builder(props: BuilderProps) {
         {snap.announce}
       </p>
 
-      {help && <HelpSheet onClose={() => setHelp(false)} handName={snap.hand ? part(snap.hand.part).name : null} brief={team ? { title: team.title, prompt: team.prompt } : challenge ? { title: challenge.texts.title, prompt: challenge.texts.prompt } : null} />}
+      {help && (
+        <HelpSheet
+          onClose={() => setHelp(false)}
+          handName={snap.hand ? part(snap.hand.part).name : null}
+          brief={
+            team
+              ? { title: team.title, prompt: team.prompt }
+              : challenge
+                ? {
+                    title: challenge.texts.title,
+                    prompt: challenge.texts.prompt,
+                  }
+                : null
+          }
+        />
+      )}
     </div>
   );
 }
 
-function HelpSheet({ onClose, handName, brief }: { onClose: () => void; handName: string | null; brief: { title: string; prompt: string } | null }) {
+function HelpSheet({
+  onClose,
+  handName,
+  brief,
+}: {
+  onClose: () => void;
+  handName: string | null;
+  brief: { title: string; prompt: string } | null;
+}) {
   return (
     <div className={styles.helpBackdrop} onClick={onClose} data-builder-ui>
-      <div className={styles.help} role="dialog" aria-modal="true" aria-label="Controles" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.help}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Controles"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className={styles.helpHead}>
           <h2>Cómo construir</h2>
-          <button type="button" className={styles.iconBtn} onClick={onClose} aria-label="Cerrar" autoFocus>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={onClose}
+            aria-label="Cerrar"
+            autoFocus
+          >
             <Icon name="close" />
           </button>
         </div>
@@ -423,7 +706,10 @@ function HelpSheet({ onClose, handName, brief }: { onClose: () => void; handName
           <dt>Arrastrar una pieza de la bandeja</dt>
           <dd>La pone donde sueltas el dedo</dd>
           <dt>Tocar la base con una pieza en la mano</dt>
-          <dd>Mueve la pieza translúcida; toca &quot;Colocar&quot; o tócala para ponerla</dd>
+          <dd>
+            Mueve la pieza translúcida; toca &quot;Colocar&quot; o tócala para
+            ponerla
+          </dd>
           <dt>Arrastrar en un espacio vacío</dt>
           <dd>Gira la vista</dd>
           <dt>Pellizcar / dos dedos</dt>
