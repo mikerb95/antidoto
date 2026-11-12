@@ -1,7 +1,7 @@
 import { brandPalette, type PublicBrand } from "@/lib/brand-palette";
 import { nameFontSize } from "@/lib/certificate";
 import { rosettePath } from "@/lib/guilloche";
-import { colors, calSans, LOGO_SRC } from "@/lib/theme";
+import { colors, calSans } from "@/lib/theme";
 import BrandLogo from "@/components/BrandLogo";
 
 // Rosetas de guilloche (las de los billetes y diplomas): se calculan una vez por proceso.
@@ -9,7 +9,8 @@ const BACKDROP = [
   rosettePath({ R: 420, r: 165, d: 150, steps: 64 }),
   rosettePath({ R: 420, r: 165, d: 95, steps: 64 }),
 ];
-const SEAL = rosettePath({ R: 400, r: 80, d: 70, steps: 48 });
+// Borde ondulado del sello: 13 lóbulos.
+const SEAL = rosettePath({ R: 390, r: 30, d: 58, steps: 260 });
 
 interface Props {
   brand: PublicBrand | null;
@@ -54,12 +55,12 @@ export default function CertificateSheet({ brand, companyName, activity, name, c
       <div aria-hidden style={{ position: "absolute", inset: "8.6mm", border: `0.2mm solid ${p.soft}`, borderRadius: "2mm" }} />
 
       <header style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10mm" }}>
-        {brand ? (
-          <BrandLogo brand={brand} surface="claro" height={50} />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={LOGO_SRC} alt="Antídoto" style={{ height: 40 }} />
-        )}
+        {/* Sin marca configurada, el monograma de la empresa en el color de Antídoto. */}
+        <BrandLogo
+          brand={brand ?? { name: companyName, primary: colors.accent, secondary: null, logoUrl: null, logoSurface: "claro" }}
+          surface="claro"
+          height={50}
+        />
         <span style={{ fontSize: "8.5pt", fontWeight: 700, letterSpacing: 1.2, color: colors.muted, textTransform: "uppercase" }}>N.º {folio}</span>
       </header>
 
@@ -77,20 +78,17 @@ export default function CertificateSheet({ brand, companyName, activity, name, c
       </div>
 
       <footer style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "10mm" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "2.5mm" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO_SRC} alt="Antídoto" style={{ height: "8mm", width: "auto", alignSelf: "flex-start" }} />
-          <span style={{ fontSize: "8.5pt", color: colors.muted, lineHeight: 1.5 }}>
-            Certificado emitido por Antídoto
-            <br />
-            antidotocolombia.com
-          </span>
+        {/* El nombre va escrito y no como imagen: un PDF no puede depender de que cargue un logo externo. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1mm" }}>
+          <span style={{ fontSize: "8.5pt", color: colors.muted }}>Certificado emitido por</span>
+          <span style={{ ...calSans, fontSize: "19pt", lineHeight: 1, color: colors.ink }}>antídoto</span>
+          <span style={{ fontSize: "8.5pt", color: colors.muted }}>antidotocolombia.com</span>
         </div>
         <svg role="img" aria-label="Sello de actividad completada" viewBox="-480 -480 960 960" style={{ width: "34mm", height: "34mm", flexShrink: 0 }}>
-          <path d={SEAL} fill="none" stroke={p.graphic} strokeWidth={5} />
-          <circle r={250} fill="#fff" stroke={p.graphic} strokeWidth={9} />
-          <circle r={214} fill={p.tint} />
-          <path d="M-100 8 L-30 78 L108 -70" fill="none" stroke={p.strong} strokeWidth={40} strokeLinecap="round" strokeLinejoin="round" />
+          <path d={SEAL} fill={p.tint} stroke={p.graphic} strokeWidth={8} strokeLinejoin="round" />
+          <circle r={262} fill="#fff" stroke={p.graphic} strokeWidth={8} />
+          <circle r={226} fill="none" stroke={p.soft} strokeWidth={4} />
+          <path d="M-100 8 L-30 78 L108 -70" fill="none" stroke={p.strong} strokeWidth={42} strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </footer>
     </article>

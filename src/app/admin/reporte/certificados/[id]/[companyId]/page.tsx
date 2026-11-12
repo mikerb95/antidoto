@@ -84,7 +84,7 @@ export default async function CertificadosPage({
       </div>
 
       {shown.map((c) => (
-        <section key={c.folio} className="cert-item" style={{ maxWidth: "297mm", margin: "0 auto" }}>
+        <section key={c.folio} className="cert-item" style={{ maxWidth: "297mm", marginInline: "auto" }}>
           {!only && everyone.length > 1 && (
             <div className="no-print" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, padding: "0 4px 8px" }}>
               <span style={{ fontSize: 13.5, fontWeight: 600, color: colors.ink }}>{c.nombre}</span>
