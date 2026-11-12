@@ -214,6 +214,15 @@ export default async function ActivityResults({ missionId: id, user, company, q,
               </div>
             </details>
           )}
+          {reportCompanies.length === 1 && (
+            <Link
+              href={`/admin/reporte/certificados/${id}/${reportCompanies[0][0]}`}
+              className="btn-secondary"
+              style={{ ...secondaryButton, display: "inline-flex", alignItems: "center" }}
+            >
+              Certificados
+            </Link>
+          )}
           {user.role === "super" && (experience || build) && (
             <Link
               href={`/admin/asignar?${new URLSearchParams({ actividad: (experience ?? build)!.key, ...(company ? { empresa: String(company.id) } : {}) })}`}

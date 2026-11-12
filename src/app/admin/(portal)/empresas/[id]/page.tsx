@@ -222,14 +222,25 @@ export default async function EmpresaPage({
                 </p>
               </div>
               {!company.archived && (
-                <Link
-                  href={`/admin/empresas/${company.id}/actividades/${first.mission_id}`}
-                  className="btn-secondary"
-                  style={{ ...secondaryButton, height: 40, display: "inline-flex", alignItems: "center", gap: 6 }}
-                >
-                  Ver resultados e informe
-                  <ArrowRightIcon />
-                </Link>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  {done > 0 && (
+                    <Link
+                      href={`/admin/reporte/certificados/${first.mission_id}/${company.id}`}
+                      className="btn-secondary"
+                      style={{ ...secondaryButton, height: 40, display: "inline-flex", alignItems: "center" }}
+                    >
+                      Certificados ({done})
+                    </Link>
+                  )}
+                  <Link
+                    href={`/admin/empresas/${company.id}/actividades/${first.mission_id}`}
+                    className="btn-secondary"
+                    style={{ ...secondaryButton, height: 40, display: "inline-flex", alignItems: "center", gap: 6 }}
+                  >
+                    Ver resultados e informe
+                    <ArrowRightIcon />
+                  </Link>
+                </div>
               )}
             </div>
 

@@ -284,6 +284,27 @@ export async function listCompanyParticipants(missionId: string, companyId: numb
   }));
 }
 
+export interface CertificateRow {
+  /** id de la participación: solo para derivar el número del certificado, nunca se muestra. */
+  id: string;
+  nombre: string;
+  completed_at: string;
+  cargo: string | null;
+}
+
+/** Quienes terminaron una actividad en una empresa: a cada uno le corresponde un certificado. */
+export async function listCertificates(missionId: string, companyId: number): Promise<CertificateRow[]> {
+  return all<CertificateRow>(
+    `SELECT p.id, p.participant_name AS nombre, p.completed_at, pp.cargo
+     FROM participations p
+     JOIN activity_codes ac ON ac.id = p.activity_code_id
+     LEFT JOIN participant_profiles pp ON pp.participation_id = p.id
+     WHERE ac.mission_id = ? AND ac.company_id = ? AND p.completed_at IS NOT NULL AND ${LIVE_CODE}
+     ORDER BY p.participant_name COLLATE NOCASE, p.completed_at`,
+    [missionId, companyId]
+  );
+}
+
 // --- Empresas y sus actividades ----------------------------------------------------
 
 export interface Assignment {

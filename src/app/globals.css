@@ -647,6 +647,35 @@ button {
   }
 }
 
+/* Certificados de participación (admin/reporte/certificados): una hoja A4 horizontal por
+   persona. El tamaño de la página lo fija la propia pantalla con su regla @page. */
+.cert-item + .cert-item {
+  margin-top: 32px;
+}
+
+@media print {
+  .cert-item {
+    max-width: none !important;
+  }
+
+  .cert-item + .cert-item {
+    margin-top: 0;
+    break-before: page;
+  }
+
+  .cert-scroll {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* Un pelo menos que la página: con 210mm exactos algunos navegadores sacan una hoja en blanco. */
+  .cert-sheet {
+    height: 209.6mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}
+
 /* Menú desplegable "Reporte PDF" de una actividad con varias empresas. */
 .report-menu > summary::-webkit-details-marker {
   display: none;

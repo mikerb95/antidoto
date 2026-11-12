@@ -1000,8 +1000,18 @@
   }
 
   .tabs {
-    flex-wrap: wrap;
-    margin-inline: -4px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 4px;
+  }
+
+  .tabs button {
+    min-height: 42px;
+    padding: 0 6px;
+  }
+
+  .tabs button::before {
+    inset-block: 4px;
   }
 
   .parts {
