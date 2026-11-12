@@ -241,12 +241,22 @@ export default function Builder(props: BuilderProps) {
 
         {idleHint && (
           <div className={`${styles.coach} ${challenge ? styles.coachLow : ""}`} role="status">
-            {snap.count <= 1 ? "Prueba poner una pieza encima de la azul" : "Prueba girar una pieza con ↻ antes de ponerla"}
+            {snap.count <= 1 ? (
+              "Prueba poner una pieza encima de la que ya está"
+            ) : (
+              <span>
+                Prueba girar una pieza con <Icon name="rotate" size={16} /> antes de ponerla
+              </span>
+            )}
           </div>
         )}
 
         <div className={styles.badges} aria-hidden="true">
-          {snap.ghost && !snap.ghost.ok && <span className={styles.badge}>⊘ {snap.ghost.problem === "ocupado" ? "Ahí ya hay una pieza" : snap.ghost.problem === "parcela" ? "Fuera de tu franja" : "Necesita apoyarse en algo"}</span>}
+          {snap.ghost && !snap.ghost.ok && (
+            <span className={`${styles.badge} ${styles.badgeWarn}`}>
+              <Icon name="block" size={16} /> {snap.ghost.problem === "ocupado" ? "Ahí ya hay una pieza" : snap.ghost.problem === "parcela" ? "Fuera de tu franja" : "Necesita apoyarse en algo"}
+            </span>
+          )}
           {snap.floating > 0 && (
             <span className={styles.badge}>
               <i className={styles.dot} /> {snap.floating} {snap.floating === 1 ? "pieza suelta" : "piezas sueltas"}
@@ -266,7 +276,8 @@ export default function Builder(props: BuilderProps) {
         )}
       </div>
 
-      <div className={styles.actions} data-builder-ui>
+      {/* La llave cambia con el modo: los botones vuelven a entrar con su animación. */}
+      <div key={sel && !snap.hand ? "seleccion" : "mano"} className={styles.actions} data-builder-ui>
         {sel && !snap.hand ? (
           <>
             <button type="button" className={styles.action} onClick={() => engine.rotate()}>
@@ -285,7 +296,7 @@ export default function Builder(props: BuilderProps) {
               <Icon name="copy" />
               <span>Duplicar</span>
             </button>
-            <button type="button" className={styles.action} onClick={() => engine.deleteSelection()}>
+            <button type="button" className={`${styles.action} ${styles.danger}`} onClick={() => engine.deleteSelection()}>
               <Icon name="trash" />
               <span>Eliminar</span>
             </button>
@@ -322,7 +333,7 @@ export default function Builder(props: BuilderProps) {
             </button>
           ))}
         </div>
-        <div className={styles.parts}>
+        <div key={category} className={styles.parts}>
           {CATEGORIES[category].parts.map((k) => {
             const p = partByKey(k);
             const thumb = snap.thumbs.get(p.id);
@@ -375,6 +386,7 @@ export default function Builder(props: BuilderProps) {
             <span className={styles.colorName}>{BRICK_COLORS[color].name}</span>
             <button type="button" className={styles.more} onClick={() => setAllColors((a) => !a)} aria-expanded={allColors}>
               {allColors ? "Menos colores" : "Todos los colores"}
+              <Icon name="chevron" size={16} />
             </button>
           </div>
         </div>

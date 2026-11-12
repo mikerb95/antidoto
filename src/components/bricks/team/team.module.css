@@ -8,6 +8,7 @@
   padding: 0 12px;
   border-radius: 12px;
   background: rgb(15 24 29 / 0.92);
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
   border: 1px solid rgb(128 220 255 / 0.25);
   font-size: 13px;
   font-weight: 600;
@@ -51,6 +52,7 @@
   padding: 8px 12px;
   border-radius: 12px;
   background: rgb(15 24 29 / 0.92);
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
   border: 1px solid rgb(128 220 255 / 0.25);
   font-size: 13px;
   font-weight: 600;
@@ -203,6 +205,7 @@
   border: 2px solid transparent;
   border-radius: 14px;
   background: #16222a;
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
   color: inherit;
   font: inherit;
   cursor: pointer;
@@ -255,6 +258,7 @@
   left: 6px;
   top: 6px;
   background: #0f181d;
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
 }
 
 .voteCheck {
@@ -280,6 +284,7 @@
   padding: 12px 14px;
   border-radius: 14px;
   background: #16222a;
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
 }
 
 .winnerCat {

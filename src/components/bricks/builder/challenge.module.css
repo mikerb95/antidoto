@@ -20,6 +20,7 @@
   padding: 0 10px;
   border-radius: 12px;
   background: rgb(15 24 29 / 0.92);
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
   border: 1px solid rgb(128 220 255 / 0.25);
   font-family: "Cal Sans", var(--font-poppins), sans-serif;
   font-size: 19px;
@@ -49,6 +50,7 @@
   border: 1px solid rgb(128 220 255 / 0.25);
   border-radius: 12px;
   background: rgb(15 24 29 / 0.92);
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
   color: inherit;
   font: inherit;
   font-size: 13px;
@@ -116,6 +118,7 @@
   padding: 18px 18px max(18px, env(safe-area-inset-bottom));
   border-radius: 22px 22px 0 0;
   background: #0f181d;
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
   border: 1px solid rgb(128 220 255 / 0.18);
   box-shadow: 0 -12px 40px rgb(0 0 0 / 0.35);
   user-select: text;
@@ -262,6 +265,7 @@
   border: 1px solid rgb(128 220 255 / 0.25);
   border-radius: 12px;
   background: #16222a;
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
   color: #e8f4f8;
   font: inherit;
   font-size: 15px;
@@ -341,6 +345,7 @@
   object-fit: contain;
   border-radius: 14px;
   background: #16222a;
+  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
 }
 
 .photoSkeleton {
