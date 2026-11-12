@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { getCompany, getMission, listCertificates } from "@/lib/queries";
 import { getCompanyBrand } from "@/lib/company-brand";
+import { getCertificateConfig } from "@/lib/certificate-data";
 import { brandCssVars, brandPalette } from "@/lib/brand-palette";
 import { certificateDate, certificateFolio, normalizeFolio } from "@/lib/certificate";
 import { colors, calSans } from "@/lib/theme";
@@ -35,7 +36,12 @@ export default async function CertificadosPage({
   // Un admin de empresa solo emite los certificados de la suya.
   if (user.role === "empresa" && user.company_id !== companyId) notFound();
 
-  const [mission, company, brand] = await Promise.all([getMission(id), getCompany(companyId), getCompanyBrand(companyId)]);
+  const [mission, company, brand, config] = await Promise.all([
+    getMission(id),
+    getCompany(companyId),
+    getCompanyBrand(companyId),
+    getCertificateConfig(companyId),
+  ]);
   if (!mission || !company || company.archived) notFound();
 
   const everyone = (await listCertificates(id, companyId)).map((c) => ({ ...c, folio: certificateFolio(c.id) }));
@@ -103,6 +109,7 @@ export default async function CertificadosPage({
               cargo={c.cargo}
               date={certificateDate(c.completed_at)}
               folio={c.folio}
+              config={config}
             />
           </div>
         </section>

@@ -290,6 +290,32 @@ CREATE TABLE IF NOT EXISTS company_branding (
   updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Certificado de participación de cada empresa. Sin fila, se usan los textos de siempre
+-- (DEFAULT_CERTIFICATE en src/lib/certificate-config.ts) y los colores de su marca.
+CREATE TABLE IF NOT EXISTS company_certificate (
+  company_id        INTEGER PRIMARY KEY REFERENCES companies(id) ON DELETE CASCADE,
+  title             TEXT NOT NULL CHECK (length(title) BETWEEN 1 AND 60),
+  intro             TEXT NOT NULL CHECK (length(intro) <= 60),
+  reason            TEXT NOT NULL CHECK (length(reason) <= 140),
+  show_date         INTEGER NOT NULL DEFAULT 1,
+  show_cargo        INTEGER NOT NULL DEFAULT 1,
+  show_folio        INTEGER NOT NULL DEFAULT 1,
+  show_logo         INTEGER NOT NULL DEFAULT 1,
+  show_decor        INTEGER NOT NULL DEFAULT 1,
+  show_seal         INTEGER NOT NULL DEFAULT 1,
+  -- Null = los colores de la marca de la empresa.
+  primary_color     TEXT CHECK (primary_color IS NULL OR primary_color GLOB '#[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]'),
+  secondary_color   TEXT CHECK (secondary_color IS NULL OR secondary_color GLOB '#[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]'),
+  signer_name       TEXT CHECK (signer_name IS NULL OR length(signer_name) <= 80),
+  signer_role       TEXT CHECK (signer_role IS NULL OR length(signer_role) <= 80),
+  -- Imagen de la firma, procesada como el logo (máx. 200 KB).
+  signature         BLOB,
+  signature_mime    TEXT CHECK (signature_mime IS NULL OR signature_mime IN ('image/png', 'image/jpeg', 'image/webp', 'image/svg+xml')),
+  signature_version TEXT,
+  updated_by        INTEGER REFERENCES admin_users(id) ON DELETE SET NULL,
+  updated_at        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- --- Archivo ---------------------------------------------------------------------
 -- Archivar esconde sin borrar: los resultados de los participantes se conservan y se
 -- puede restaurar. Tablas aparte y no columnas nuevas: el esquema solo usa CREATE IF NOT EXISTS.
