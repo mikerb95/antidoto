@@ -70,6 +70,13 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(admin_user_id);
 
+-- Pases de entrada desde el panel de Antídoto (src/app/admin/entrar) ya usados: cada uno
+-- sirve una sola vez. Las filas vencidas se borran en la entrada siguiente.
+CREATE TABLE IF NOT EXISTS sso_passes (
+  jti        TEXT PRIMARY KEY,
+  expires_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS audit_log (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   text          TEXT NOT NULL,

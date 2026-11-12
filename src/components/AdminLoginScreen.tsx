@@ -11,7 +11,7 @@ import DepartureBoard from "./motion/DepartureBoard";
 import MissionPass from "./motion/MissionPass";
 import MotionHeading from "./motion/MotionHeading";
 
-export default function AdminLoginScreen({ backdrop }: { backdrop?: ReactNode }) {
+export default function AdminLoginScreen({ backdrop, notice }: { backdrop?: ReactNode; notice?: string }) {
   const [state, formAction, pending] = useActionState<LoginState, FormData>(loginAction, null);
   const [attempt, setAttempt] = useState(0);
   // Tras un error React 19 reinicia el form: el usuario se conserva (la contraseña no).
@@ -93,6 +93,11 @@ export default function AdminLoginScreen({ backdrop }: { backdrop?: ReactNode })
                   required
                 />
               </div>
+              {notice && !state?.error && !pending && (
+                <span role="status" style={{ fontSize: 12.5, color: colors.inkSoft, fontWeight: 600 }}>
+                  {notice}
+                </span>
+              )}
               {state?.error && !pending && (
                 <span role="alert" style={{ fontSize: 12.5, color: colors.danger, fontWeight: 600 }}>
                   {state.error}

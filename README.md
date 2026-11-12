@@ -39,6 +39,17 @@ El cliente se importa desde `@libsql/client/web` a propósito. El import por def
 
 Las variables `SEED_ADMIN_*` solo las usa el script de seed; no se leen en runtime y no hace falta cargarlas en Vercel.
 
+## Panel de Antídoto
+
+El panel del sitio (`antidoto-web`, `/admin/`) es la puerta de entrada a este portal para el equipo de Antídoto:
+
+- **Entrada desde el panel** (`src/app/admin/entrar`): el panel firma un pase de 60 segundos y un solo uso con el correo de la persona (solo su rol Admin puede pedirlo). Aquí se canjea por una sesión de superadmin; la cuenta se crea la primera vez, sin contraseña, con el correo como usuario. Los pases usados quedan en `sso_passes`.
+- **API para el panel** (`src/app/api/panel/`, `src/lib/panel-api.ts`): resumen, empresas con sus actividades y alta de una empresa. Solo de servidor a servidor, con un pase de API en `Authorization`.
+- **Pases** (`src/lib/panel-pass.ts`, con pruebas): los firma `api/src/misiones.ts` de `antidoto-web`. Si el formato cambia, cambia en los dos proyectos.
+- **Variable**: `PANEL_SHARED_SECRET`, el mismo valor que `MISIONES_SECRETO` en `antidoto-web` (32 caracteres o más). Sin ella nada de esto funciona y el resto del portal sigue igual.
+
+Los admins de empresa siguen entrando con usuario y contraseña.
+
 ## Usuarios del portal
 
 - **Superadmin**: ve todas las empresas, gestiona empresas, textos legales y auditoría.
