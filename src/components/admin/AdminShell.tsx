@@ -9,6 +9,7 @@ import { BuildingIcon, DocIcon, GearIcon, HomeIcon, KeyIcon, LibraryIcon, Logout
 import NavPill from "@/components/motion/NavPill";
 import NotificationsBell from "./NotificationsBell";
 import Toaster from "./Toaster";
+import GuideAssistant from "./guide/GuideAssistant";
 
 interface Props {
   roleTitle: string;
@@ -242,6 +243,7 @@ export default function AdminShell({ roleTitle, roleSubtitle, showDocs, ownCompa
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO_SRC} alt="Antídoto" className="admin-topbar-logo" />
+          <GuideAssistant role={isEmpresa ? "empresa" : "super"} companyId={ownCompanyId} />
           <NotificationsBell notifications={notifications} />
         </div>
         {children}

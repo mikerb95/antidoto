@@ -63,6 +63,7 @@ export default function GuideAssistant({ role, companyId }: Props) {
         onClick={openPanel}
         aria-haspopup="dialog"
         aria-expanded={panelOpen}
+        aria-label="Guía paso a paso"
       >
         <span className={styles.launcherIcon} aria-hidden>
           ?

@@ -1,0 +1,478 @@
+/* Asistente de guías del portal. Colores de marca Antídoto (src/lib/theme.ts). */
+
+.launcher {
+  --ink: #0f181d;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px 0 6px;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(12, 92, 125, 0.08);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.launcher:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(12, 92, 125, 0.14);
+}
+
+.launcher:focus-visible,
+.item:focus-visible,
+.close:focus-visible,
+.nextBtn:focus-visible,
+.backBtn:focus-visible,
+.goBtn:focus-visible {
+  outline: 3px solid #3bc8f3;
+  outline-offset: 2px;
+}
+
+.launcherIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3bc8f3, #1c99ca);
+  color: #fff;
+  font-family: "Cal Sans", sans-serif;
+  font-size: 15px;
+}
+
+.launcherDot {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e0553b;
+  animation: dot 1.6s ease-in-out infinite;
+}
+
+@keyframes dot {
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+/* --- Panel ------------------------------------------------------------------------------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 24, 29, 0.38);
+  animation: fade 180ms ease;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.panel {
+  width: min(440px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  padding: 26px 22px 28px;
+  background: #f7fafb;
+  box-shadow: -20px 0 45px rgba(12, 92, 125, 0.18);
+  animation: slideIn 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-family: "Cal Sans", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: #0f181d;
+}
+
+.panelIntro {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #5c7680;
+}
+
+.close {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #3c5560;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: #e3f6fc;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0c5c7d;
+}
+
+.progressBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 6px;
+  background: #e3f6fc;
+  overflow: hidden;
+}
+
+.progressBar span {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #3bc8f3, #1c99ca);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(12, 92, 125, 0.08);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.item:hover {
+  background: #f1fafd;
+  transform: translateY(-1px);
+}
+
+.item[aria-current="step"] {
+  background: #e3f6fc;
+}
+
+.itemNum {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #0f181d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.itemNumDone {
+  background: #1f8a4c;
+}
+
+.itemText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.itemTitle {
+  font-family: "Cal Sans", sans-serif;
+  font-size: 16.5px;
+  color: #0f181d;
+}
+
+.itemSummary {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #5c7680;
+}
+
+.itemMeta {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0c5c7d;
+}
+
+.itemGo {
+  flex: none;
+  align-self: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1c99ca;
+}
+
+/* --- Globo y foco -------------------------------------------------------------------------- */
+
+.spotlight {
+  position: fixed;
+  z-index: 60;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 3px #3bc8f3,
+    0 0 0 9999px rgba(15, 24, 29, 0.42);
+  pointer-events: none;
+  transition:
+    top 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    left 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 16px;
+  box-shadow: 0 0 0 0 rgba(59, 200, 243, 0.55);
+  animation: pulse 1.8s ease-out infinite;
+}
+
+@keyframes pulse {
+  to {
+    box-shadow: 0 0 0 14px rgba(59, 200, 243, 0);
+  }
+}
+
+.coach {
+  position: fixed;
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 16px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 45px rgba(12, 92, 125, 0.22), 0 2px 8px rgba(15, 24, 29, 0.08);
+  animation: pop 240ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.coachHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-right: -8px;
+}
+
+.coachGuide {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #1c99ca;
+}
+
+.coachHead .close {
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+}
+
+.steps {
+  display: flex;
+  gap: 4px;
+}
+
+.steps span {
+  flex: 1;
+  height: 4px;
+  border-radius: 4px;
+  background: #e3f6fc;
+}
+
+.steps .stepDone {
+  background: #80dcff;
+}
+
+.steps .stepNow {
+  background: #1c99ca;
+}
+
+.coachTitle {
+  margin: 2px 0 0;
+  font-family: "Cal Sans", sans-serif;
+  font-size: 19px;
+  font-weight: 400;
+  color: #0f181d;
+}
+
+.coachBody {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #3c5560;
+}
+
+.away {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #e3f6fc;
+  font-size: 13px;
+  color: #0c5c7d;
+}
+
+.goBtn {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #0f181d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: #5c7680;
+}
+
+.coachFoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.backBtn,
+.nextBtn {
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 11px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.backBtn {
+  background: transparent;
+  color: #3c5560;
+}
+
+.backBtn:hover:not(:disabled) {
+  background: #f1fafd;
+}
+
+.backBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.nextBtn {
+  background: linear-gradient(135deg, #3bc8f3, #1c99ca);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(28, 153, 202, 0.3);
+}
+
+@media (max-width: 640px) {
+  .launcherText {
+    display: none;
+  }
+
+  .launcher {
+    padding: 0 6px;
+  }
+
+  .backdrop {
+    align-items: flex-end;
+  }
+
+  .panel {
+    height: auto;
+    max-height: 88vh;
+    border-radius: 22px 22px 0 0;
+    padding: 22px 16px max(22px, env(safe-area-inset-bottom));
+    animation-name: sheetIn;
+  }
+
+  @keyframes sheetIn {
+    from {
+      transform: translateY(40px);
+      opacity: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launcherDot,
+  .spotlight::after {
+    animation: none;
+  }
+
+  .spotlight {
+    transition: none;
+  }
+
+  .backdrop,
+  .panel,
+  .coach {
+    animation: none;
+  }
+}
