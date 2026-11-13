@@ -183,3 +183,17 @@ equipo; galería con rejilla de fotos numeradas, conteo de votos y categorías; 
 4. Probar a 390 px de ancho (celular) y a 1440 px (computador). Para el proyector hace falta
    abrir una sala desde `/admin/biblioteca/equipos/[modo]` con la base local.
 5. Al terminar, regresar el interruptor a `false`.
+
+## Kits de piezas (2026-11-12)
+
+Al asignar un reto de construcción se puede elegir un kit: Duck polybag (6 piezas), Window
+Exploration Bag (48) o Starter kit (210 construibles de 234). El participante construye solo con
+esas piezas, en sus colores y cantidades; la bandeja muestra cuántas quedan de cada una.
+
+- Catálogo e inventario: `src/lib/bricks/kits.ts` (cada sustitución anotada en `from`).
+- Se guarda en la tabla `activity_code_kit`; sin fila, el reto usa todas las piezas.
+- Replicar no acepta kit (el modelo pide piezas exactas). Con kit, la base arranca vacía.
+- El servidor rechaza obras que se pasen del kit (`validateWork`).
+- Se agregaron 7 colores al final de la paleta (verde oscuro, rosa oscuro, azul medio, plata y
+  tres transparentes) para respetar los colores reales de las bolsas.
+- Falta: kits en las salas de equipo (el Starter sirve para grupos de hasta 4).
