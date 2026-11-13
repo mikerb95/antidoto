@@ -8,6 +8,7 @@
 import * as THREE from "three";
 import { encodeBuild } from "@/lib/bricks/codec";
 import { apply, History, type Op } from "@/lib/bricks/ops";
+import { overStock, stockKey, stockLeft, type Stock } from "@/lib/bricks/kits";
 import { BRICK_COLORS } from "@/lib/bricks/palette";
 import { part } from "@/lib/bricks/parts";
 import { proposePlacement, type PlaceProblem, type Proposal } from "@/lib/bricks/place";
@@ -49,6 +50,10 @@ export interface BuilderSnapshot {
   color: number;
   /** Máximo de piezas del reto; null = sin límite. */
   limit: number | null;
+  /** Lo que queda del kit por pieza y color (`stockKey`); null = sin kit. */
+  left: Stock | null;
+  /** Miniaturas del kit, cada pieza en su color (`stockKey` → data URL). */
+  kitThumbs: Map<string, string>;
   /** Sube con cada cambio de la obra: el guardado automático lo vigila. */
   version: number;
   /** Por qué ahora solo se puede mirar (turno de otro, rol de quien describe); null = se construye. */
@@ -112,6 +117,8 @@ export class BuilderEngine {
   private announce = "";
   private framed = false;
   private limit: number | null = null;
+  private stock: Stock | null = null;
+  private kitThumbs = new Map<string, string>();
   private version = 0;
   /** Recibe cada cambio propio ya aplicado, para mandarlo al equipo. */
   private onLocalOp: ((op: Op) => void) | null = null;
@@ -167,6 +174,7 @@ export class BuilderEngine {
       this.emit();
     });
     this.thumbsCache.clear();
+    this.kitThumbs = new Map();
 
     // Los gestos se escuchan en el contenedor, en fase de captura: así deciden antes que la cámara
     // orbital si el dedo mueve la pieza o gira la vista.
@@ -186,6 +194,7 @@ export class BuilderEngine {
     on(window, "pointermove", this.onTrayMove);
     on(window, "pointerup", this.onTrayUp);
     this.refreshThumbs();
+    this.refreshKitThumbs();
     this.parcelMesh = null;
     this.drawParcel();
     this.emit();
@@ -232,6 +241,8 @@ export class BuilderEngine {
       thumbs: this.thumbsCache.get(this.thumbColor) ?? new Map(),
       color: this.thumbColor,
       limit: this.limit,
+      left: this.stock ? stockLeft(this.stock, this.world.bricks.values()) : null,
+      kitThumbs: this.kitThumbs,
       version: this.version,
       readOnly: this.readOnly,
     };
@@ -268,6 +279,12 @@ export class BuilderEngine {
     this.setThumbColor(color);
     if (this.selectionId && !this.hand) {
       const b = this.world.bricks.get(this.selectionId);
+      if (b && b.color !== color && !this.hasStock(b.part, color)) {
+        brickSound().play("invalid");
+        this.say(`El kit no trae más ${part(b.part).name} en ${BRICK_COLORS[color].name}`, { visible: true });
+        this.emit();
+        return;
+      }
       if (b && b.color !== color) this.run({ t: "paint", id: b.id, from: b.color, to: color }, `Pieza pintada de ${BRICK_COLORS[color].name}`);
       return;
     }
@@ -331,6 +348,38 @@ export class BuilderEngine {
     this.emit();
   }
 
+  /** Kit de piezas: solo se puede poner lo que queda en la bolsa. null = todas las piezas. */
+  setStock(stock: Stock | null) {
+    this.stock = stock;
+    this.kitThumbs = new Map();
+    this.refreshKitThumbs();
+    this.emit();
+  }
+
+  private hasStock(partId: number, color: number): boolean {
+    if (!this.stock) return true;
+    const key = stockKey(partId, color);
+    let used = 0;
+    for (const b of this.world.bricks.values()) if (b.part === partId && b.color === color) used++;
+    return used < (this.stock.get(key) ?? 0);
+  }
+
+  /** Una miniatura por pieza del kit, en su color: se agrupan por color para dibujar de una vez. */
+  private refreshKitThumbs() {
+    if (!this.mounted || !this.stock || this.kitThumbs.size) return;
+    const byColor = new Map<number, number[]>();
+    for (const key of this.stock.keys()) {
+      const [p, c] = key.split(":").map(Number);
+      byColor.set(c, [...(byColor.get(c) ?? []), p]);
+    }
+    const out = new Map<string, string>();
+    for (const [c, parts] of byColor) {
+      for (const [p, url] of renderThumbs(this.stage.renderer, this.stage.scene.environment, parts, c, 112)) out.set(stockKey(p, c), url);
+    }
+    this.kitThumbs = out;
+    this.stage.request();
+  }
+
   private atLimit(): boolean {
     return this.limit !== null && this.world.bricks.size >= this.limit;
   }
@@ -344,6 +393,11 @@ export class BuilderEngine {
     if (!this.movingId && this.atLimit()) {
       brickSound().play("invalid");
       this.say(`Ya usaste tus ${this.limit} piezas. Mueve o quita alguna para cambiar tu obra.`, { visible: true });
+      return false;
+    }
+    if (!this.movingId && !this.hasStock(h.part, h.color)) {
+      brickSound().play("invalid");
+      this.say(`Ya usaste todas las piezas de ${part(h.part).name} ${BRICK_COLORS[h.color].name} del kit`, { visible: true });
       return false;
     }
     if (!pr.ok) {
@@ -372,6 +426,13 @@ export class BuilderEngine {
     haptic(10);
     this.afterChange(`Pieza ${prev ? "movida" : "colocada"}: ${describe(brick)}`);
     this.view.animateDrop(brick.id);
+    // Era la última de esas en el kit: la mano queda vacía en vez de ofrecer una que ya no hay.
+    if (!prev && !this.hasStock(h.part, h.color)) {
+      this.hand = null;
+      this.updateGhost(null);
+      this.emit();
+      return true;
+    }
     // El fantasma se recalcula: la pieza recién puesta ocupa su lugar.
     this.refreshGhostAtLast();
     return true;
@@ -448,6 +509,12 @@ export class BuilderEngine {
       this.history.undo();
       brickSound().play("invalid");
       this.say(`Ya usaste tus ${this.limit} piezas`, { visible: true });
+      return;
+    }
+    if (this.stock && overStock(this.stock, this.world.bricks.values())) {
+      this.history.undo();
+      brickSound().play("invalid");
+      this.say("Esas piezas ya no quedan en el kit", { visible: true });
       return;
     }
     this.onLocalOp?.(redone);

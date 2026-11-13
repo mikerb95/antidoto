@@ -14,15 +14,19 @@ import { CARGO_LIMITS, DEFAULT_CARGOS } from "@/lib/profile";
 interface Props {
   companies: { id: number; name: string }[];
   /** Escenas y retos de construcción: cada uno con su miniatura. */
-  activities: { key: string; thumb: { scene: ExperienceDef["scene"] } | { build: BuildKind }; title: string; detail: string }[];
+  activities: { key: string; thumb: { scene: ExperienceDef["scene"] } | { build: BuildKind }; title: string; detail: string; kit?: boolean }[];
   defaultCompany: number | null;
   defaultActivity: string | null;
   /** Cargos del último código de cada empresa, para proponerlos otra vez. */
   cargosByCompany: Record<number, string[]>;
+  /** Kits de piezas para los retos de construcción que los aceptan. */
+  kits: { key: string; name: string; ref: string; use: string; total: number }[];
 }
 
-export default function AssignForm({ companies, activities, defaultCompany, defaultActivity, cargosByCompany }: Props) {
+export default function AssignForm({ companies, activities, defaultCompany, defaultActivity, cargosByCompany, kits }: Props) {
   const [state, action, pending] = useActionState<AssignState, FormData>(assignActivity, null);
+  const [activity, setActivity] = useState(defaultActivity);
+  const withKit = !!activities.find((a) => a.key === activity)?.kit;
   const cargosFor = (id: number | null) => ((id && cargosByCompany[id]) || DEFAULT_CARGOS).join("\n");
   const [askCargo, setAskCargo] = useState(true);
   const [cargos, setCargos] = useState(() => cargosFor(defaultCompany));
@@ -87,6 +91,7 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
                 name="experience"
                 value={a.key}
                 defaultChecked={a.key === defaultActivity}
+                onChange={() => setActivity(a.key)}
                 required
                 style={{ position: "absolute", top: 12, right: 12, width: 18, height: 18, accentColor: colors.accent, zIndex: 1 }}
               />
@@ -104,9 +109,36 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
         </div>
       </fieldset>
 
+      {withKit && (
+        <fieldset style={fieldset}>
+          <legend style={legend}>
+            <Step n={3} /> ¿Con qué kit de piezas?
+          </legend>
+          <span style={{ fontSize: 12.5, color: colors.muted, marginTop: -4, lineHeight: 1.5 }}>
+            Cada participante construye solo con las piezas de la bolsa o caja, en sus colores y cantidades.
+          </span>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
+            {[{ key: "", name: "Todas las piezas", ref: "", use: "Sin límite de piezas ni de colores.", total: 0 }, ...kits].map((k) => (
+              <label key={k.key || "todas"} className="assign-option" style={{ ...card, padding: "14px 16px", cursor: "pointer", display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <input type="radio" name="kit" value={k.key} defaultChecked={k.key === ""} style={{ width: 18, height: 18, accentColor: colors.accent, marginTop: 1, flex: "none" }} />
+                <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <span style={{ ...calSans, fontSize: 15.5, color: colors.ink }}>{k.name}</span>
+                  {k.total > 0 && (
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: colors.accentDark }}>
+                      {k.total} piezas · ref. {k.ref}
+                    </span>
+                  )}
+                  <span style={{ fontSize: 12.5, color: colors.muted, lineHeight: 1.45 }}>{k.use}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
       <fieldset style={fieldset}>
         <legend style={legend}>
-          <Step n={3} /> ¿Hasta cuándo se puede jugar?&nbsp;<span style={{ fontWeight: 400, color: colors.muted, fontSize: 13 }}>(opcional)</span>
+          <Step n={withKit ? 4 : 3} /> ¿Hasta cuándo se puede jugar?&nbsp;<span style={{ fontWeight: 400, color: colors.muted, fontSize: 13 }}>(opcional)</span>
         </legend>
         <input
           type="date"
@@ -119,7 +151,7 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
 
       <fieldset style={fieldset}>
         <legend style={legend}>
-          <Step n={4} /> ¿Qué datos le pedimos a cada participante?
+          <Step n={withKit ? 5 : 4} /> ¿Qué datos le pedimos a cada participante?
         </legend>
         <span style={{ fontSize: 12.5, color: colors.muted, marginTop: -4, lineHeight: 1.5 }}>
           Se piden en la bienvenida, siempre con listas para elegir: así los resultados se pueden filtrar por cargo y por lugar sin nombres

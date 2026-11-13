@@ -7,7 +7,8 @@ import { colors, calSans } from "@/lib/theme";
 import AssignForm from "@/components/admin/AssignForm";
 import { lastCargosByCompany } from "@/lib/participant-profile";
 import { listBuildLibrary } from "@/lib/build-data";
-import { getBuild, KIND_LABEL } from "@/lib/bricks/challenges";
+import { acceptsKit, getBuild, KIND_LABEL } from "@/lib/bricks/challenges";
+import { KITS, kitTotal } from "@/lib/bricks/kits";
 import { BRICKS_VISIBLE } from "@/lib/bricks/visible";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ export default async function AsignarPage({ searchParams }: { searchParams: Prom
       thumb: { build: def.kind },
       title: texts.title,
       detail: `Construcción 3D · ${KIND_LABEL[def.kind]} · ${def.minutes}`,
+      kit: acceptsKit(def),
     })),
   ];
 
@@ -64,6 +66,7 @@ export default async function AsignarPage({ searchParams }: { searchParams: Prom
         defaultCompany={preCompany}
         defaultActivity={preActivity ?? activities[0]?.key ?? null}
         cargosByCompany={cargosByCompany}
+        kits={KITS.map((k) => ({ key: k.key, name: k.name, ref: k.ref, use: k.use, total: kitTotal(k) }))}
       />
     </div>
   );
