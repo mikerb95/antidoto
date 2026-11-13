@@ -379,7 +379,7 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
         )}
         {session.status !== "lobby" && (
           <span className={styles.pinSmall}>
-            PIN <b>{session.pin}</b>
+            PIN <b>{session.pin.slice(0, 3)} {session.pin.slice(3)}</b>
           </span>
         )}
         {session.status === "building" && (
