@@ -224,10 +224,10 @@ export default function TeamLayer({ engine, snap, view, onStatus }: Props) {
               ¡Estás en el {identity.name}!
             </h2>
             <p className={styles.prompt}>{view.prompt}</p>
-            <ul className={own.roster} aria-label="Tu equipo">
+            <ul className={own.roster} aria-label="Tu equipo" style={{ "--team": identity.color } as React.CSSProperties}>
               {members.map((m) => (
                 <li key={m.slot}>
-                  <i style={{ background: identity.color }} aria-hidden="true" />
+                  <i aria-hidden="true" />
                   {m.nickname}
                   {m.nickname === view.me.nickname && <span> (tú)</span>}
                 </li>

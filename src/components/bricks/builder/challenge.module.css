@@ -1,8 +1,9 @@
-/* Capa del reto sobre el constructor: mismo lenguaje que el constructor (paneles sólidos oscuros,
-   celeste Antídoto como acento). Las ventanas suben desde abajo en el celular y se centran en el
-   computador. */
+/* Capa del reto y del modo equipos sobre el constructor: el mismo mundo claro del constructor
+   (superficies blancas, tinta oscura, celeste Antídoto para la acción, colores de ficha como
+   acentos). Las ventanas suben desde abajo en el celular y se centran en el computador. */
 
 .hud {
+  composes: tokens from "../tokens.module.css";
   position: absolute;
   top: 10px;
   right: 10px;
@@ -15,23 +16,21 @@
 .clock {
   display: inline-grid;
   place-items: center;
-  min-width: 64px;
-  height: 40px;
-  padding: 0 10px;
-  border-radius: 12px;
-  background: rgb(15 24 29 / 0.92);
-  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
-  border: 1px solid rgb(128 220 255 / 0.25);
+  min-width: 68px;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: var(--r-m);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--lift), 0 3px 0 var(--well-strong);
   font-family: "Cal Sans", var(--font-poppins), sans-serif;
-  font-size: 19px;
-  font-variant-numeric: tabular-nums;
+  font-size: 21px;
   letter-spacing: 0.02em;
 }
 
 .clockWarn {
-  background: #fac80a;
-  border-color: #fac80a;
-  color: #0f181d;
+  background: var(--yellow);
+  box-shadow: var(--lift), 0 3px 0 var(--yellow-edge);
   animation: pulse 1s ease-in-out infinite;
 }
 
@@ -45,36 +44,43 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 40px;
+  height: 42px;
   padding: 0 12px;
-  border: 1px solid rgb(128 220 255 / 0.25);
-  border-radius: 12px;
-  background: rgb(15 24 29 / 0.92);
-  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
-  color: inherit;
+  border: 0;
+  border-radius: var(--r-m);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--lift), 0 3px 0 var(--well-strong);
   font: inherit;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .deliver {
-  height: 40px;
+  height: 42px;
   padding: 0 16px;
   border: 0;
-  border-radius: 12px;
-  background: #3bc8f3;
-  color: #0f181d;
+  border-radius: var(--r-m);
+  background: var(--brand);
+  color: var(--ink);
   font: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgb(59 200 243 / 0.3);
+  box-shadow: var(--lift), 0 3px 0 var(--brand-edge);
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+.deliver:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: var(--lift);
 }
 
 .deliver:disabled {
-  background: rgb(128 220 255 / 0.18);
-  color: rgb(232 244 248 / 0.5);
-  box-shadow: none;
+  background: var(--well);
+  color: var(--ink-3);
+  box-shadow: var(--lift);
   cursor: default;
 }
 
@@ -83,29 +89,32 @@
 .primary:focus-visible,
 .secondary:focus-visible,
 .close:focus-visible {
-  outline: 2px solid #80dcff;
+  outline: 3px solid var(--brand-edge);
   outline-offset: 2px;
 }
 
 .saveState {
+  composes: tokens from "../tokens.module.css";
   position: absolute;
   top: 16px;
   left: 12px;
   margin: 0;
   font-size: 12px;
-  color: rgb(232 244 248 / 0.6);
+  font-weight: 500;
+  color: var(--ink-3);
   pointer-events: none;
 }
 
 /* ---- Ventanas ---- */
 
 .backdrop {
+  composes: tokens from "../tokens.module.css";
   position: fixed;
   inset: 0;
   z-index: 20;
   display: grid;
   place-items: end center;
-  background: rgb(0 0 0 / 0.5);
+  background: rgb(15 24 29 / 0.4);
 }
 
 .sheet {
@@ -115,14 +124,24 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 18px 18px max(18px, env(safe-area-inset-bottom));
-  border-radius: 22px 22px 0 0;
-  background: #0f181d;
-  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
-  border: 1px solid rgb(128 220 255 / 0.18);
-  box-shadow: 0 -12px 40px rgb(0 0 0 / 0.35);
+  padding: 10px 18px max(18px, env(safe-area-inset-bottom));
+  border-radius: var(--r-l) var(--r-l) 0 0;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--float);
   user-select: text;
-  animation: sheetUp 280ms cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  animation: sheetUp 320ms var(--ease-out);
+}
+
+/* Agarradera de la hoja en el celular, igual que la ayuda del constructor. */
+.sheet::before {
+  content: "";
+  flex: none;
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--well-strong);
 }
 
 @keyframes sheetUp {
@@ -148,21 +167,21 @@
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #80dcff;
+  color: var(--brand-edge);
 }
 
 .kindDot {
-  width: 9px;
-  height: 9px;
-  border-radius: 3px;
-  background: #fac80a;
-  box-shadow: 0 0 0 3px rgb(250 200 10 / 0.2);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--yellow);
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.35);
 }
 
 .hello {
   margin: 0;
   font-size: 14px;
-  color: rgb(232 244 248 / 0.75);
+  color: var(--ink-2);
 }
 
 .title {
@@ -183,22 +202,24 @@
   margin: 0;
   font-size: 14.5px;
   line-height: 1.5;
+  color: var(--ink-2);
 }
 
 .muted {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.45;
-  color: rgb(232 244 248 / 0.62);
+  color: var(--ink-3);
 }
 
 .error {
   margin: 0;
   padding: 8px 12px;
-  border-radius: 10px;
-  background: rgb(255 109 119 / 0.14);
-  color: #ffb3b8;
+  border-radius: var(--r-s);
+  background: var(--red-tint);
+  color: var(--red-edge);
   font-size: 13px;
+  font-weight: 600;
 }
 
 .rules {
@@ -215,18 +236,20 @@
   flex-direction: column;
   gap: 2px;
   padding: 10px 12px;
-  border-radius: 12px;
-  background: rgb(128 220 255 / 0.08);
+  border-radius: var(--r-m);
+  background: var(--well);
 }
 
 .rules b {
-  font-size: 15px;
-  font-weight: 600;
+  font-family: "Cal Sans", var(--font-poppins), sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.1;
 }
 
 .rules span {
   font-size: 12px;
-  color: rgb(232 244 248 / 0.62);
+  color: var(--ink-3);
 }
 
 .profile {
@@ -236,7 +259,7 @@
   margin: 4px 0 0;
   padding: 14px 0 0;
   border: 0;
-  border-top: 1px solid rgb(128 220 255 / 0.14);
+  border-top: 1px solid var(--line);
 }
 
 /* Flotada, la leyenda sale del borde del fieldset y queda como un título más. */
@@ -253,7 +276,8 @@
   flex-direction: column;
   gap: 6px;
   font-size: 13px;
-  color: rgb(232 244 248 / 0.8);
+  font-weight: 500;
+  color: var(--ink-2);
 }
 
 .field select,
@@ -262,11 +286,11 @@
   width: 100%;
   min-height: 46px;
   padding: 10px 12px;
-  border: 1px solid rgb(128 220 255 / 0.25);
-  border-radius: 12px;
-  background: #16222a;
-  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
-  color: #e8f4f8;
+  border: 0;
+  border-radius: var(--r-m);
+  background: var(--well);
+  box-shadow: inset 0 0 0 1.5px var(--well-strong);
+  color: var(--ink);
   font: inherit;
   font-size: 15px;
 }
@@ -279,8 +303,9 @@
 .field select:focus,
 .field input:focus,
 .field textarea:focus {
-  outline: 2px solid #3bc8f3;
-  outline-offset: 0;
+  outline: 0;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--brand);
 }
 
 .row {
@@ -300,29 +325,46 @@
   place-items: center;
   min-height: 50px;
   padding: 0 18px;
-  border-radius: 14px;
+  border: 0;
+  border-radius: var(--r-m);
   font: inherit;
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  transition: transform 80ms ease, box-shadow 80ms ease, background-color 160ms ease;
 }
 
 .primary {
-  border: 0;
-  background: #3bc8f3;
-  color: #0f181d;
+  background: var(--brand);
+  color: var(--ink);
+  box-shadow: 0 4px 0 var(--brand-edge);
 }
 
-.primary:disabled {
-  opacity: 0.6;
-  cursor: default;
+.primary:hover:not(:disabled) {
+  background: #52d0f6;
 }
 
 .secondary {
-  border: 1px solid rgb(128 220 255 / 0.3);
-  background: transparent;
-  color: inherit;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--well-strong), 0 3px 0 var(--well-strong);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--brand-tint);
+}
+
+.primary:active:not(:disabled),
+.secondary:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: inset 0 0 0 1.5px var(--well-strong);
+}
+
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .close {
@@ -332,10 +374,14 @@
   height: 44px;
   flex: none;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-m);
   background: transparent;
   color: inherit;
   cursor: pointer;
+}
+
+.close:hover {
+  background: var(--well);
 }
 
 .photo {
@@ -343,17 +389,16 @@
   width: 100%;
   max-height: 42vh;
   object-fit: contain;
-  border-radius: 14px;
-  background: #16222a;
-  color: #e8f4f8; /* provisional: se va al pasar esta hoja al mundo claro */
+  border-radius: var(--r-m);
+  background: var(--well);
 }
 
 .photoSkeleton {
   width: 100%;
   aspect-ratio: 4 / 3;
   max-height: 42vh;
-  border-radius: 14px;
-  background: linear-gradient(100deg, #16222a 30%, #1f303a 50%, #16222a 70%) 0 0 / 200% 100%;
+  border-radius: var(--r-m);
+  background: linear-gradient(100deg, var(--well) 30%, var(--well-strong) 50%, var(--well) 70%) 0 0 / 200% 100%;
   animation: shimmer 1.2s linear infinite;
 }
 
@@ -379,8 +424,12 @@
   }
 
   .sheet {
-    border-radius: 22px;
+    border-radius: var(--r-l);
     padding: 22px 24px;
+  }
+
+  .sheet::before {
+    display: none;
   }
 }
 
@@ -399,12 +448,12 @@
   gap: 10px;
   min-height: 44px;
   font-size: 14px;
-  color: rgb(232 244 248 / 0.85);
+  color: var(--ink-2);
   cursor: pointer;
 }
 
 .check input {
   width: 20px;
   height: 20px;
-  accent-color: #3bc8f3;
+  accent-color: var(--brand-edge);
 }
