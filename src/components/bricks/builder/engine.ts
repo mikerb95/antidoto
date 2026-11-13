@@ -364,20 +364,31 @@ export class BuilderEngine {
     return used < (this.stock.get(key) ?? 0);
   }
 
-  /** Una miniatura por pieza del kit, en su color: se agrupan por color para dibujar de una vez. */
+  /** Pestaña visible del kit: solo esas miniaturas se dibujan (un kit grande trae ~80). */
+  private kitWanted: string[] = [];
+
+  showKitThumbs(keys: string[]) {
+    this.kitWanted = keys;
+    this.refreshKitThumbs();
+  }
+
+  /** Dibuja las miniaturas que faltan de la pestaña visible, cada pieza en su color. */
   private refreshKitThumbs() {
-    if (!this.mounted || !this.stock || this.kitThumbs.size) return;
+    if (!this.mounted || !this.stock) return;
     const byColor = new Map<number, number[]>();
-    for (const key of this.stock.keys()) {
+    for (const key of this.kitWanted) {
+      if (this.kitThumbs.has(key) || !this.stock.has(key)) continue;
       const [p, c] = key.split(":").map(Number);
       byColor.set(c, [...(byColor.get(c) ?? []), p]);
     }
-    const out = new Map<string, string>();
+    if (!byColor.size) return;
+    const out = new Map(this.kitThumbs);
     for (const [c, parts] of byColor) {
       for (const [p, url] of renderThumbs(this.stage.renderer, this.stage.scene.environment, parts, c, 112)) out.set(stockKey(p, c), url);
     }
     this.kitThumbs = out;
     this.stage.request();
+    this.emit();
   }
 
   private atLimit(): boolean {

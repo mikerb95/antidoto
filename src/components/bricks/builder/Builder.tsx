@@ -206,6 +206,13 @@ export default function Builder(props: BuilderProps) {
     };
   }, [engine, tier, limit, stock]);
 
+  // Con kit, solo se dibujan las miniaturas de la pestaña abierta.
+  const kitTab = kitTabs[Math.min(category, kitTabs.length - 1)];
+  const kitTabKeys = kitTab?.items.map((i) => stockKey(i.part, i.color)).join(",") ?? "";
+  useEffect(() => {
+    if (kitTabKeys) engine.showKitThumbs(kitTabKeys.split(","));
+  }, [engine, kitTabKeys, tier]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
