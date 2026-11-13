@@ -223,19 +223,20 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
     cityRef.current?.setSpin(session.status !== "lobby");
   }, [session.status]);
 
-  // Mientras construyen, el tablero tapa la derecha: las obras se corren para quedar a la vista.
+  // El tablero tapa la derecha (construyendo y al cerrar, menos en la votación): las obras se corren.
+  const boardShown = session.status !== "lobby" && snap.gallery.status !== "voting";
   // Mismo ancho que el tablero en la hoja de estilos (min(380px, 34vw) más el margen; oculto bajo 900 px).
   useEffect(() => {
     const city = cityRef.current;
     if (!city) return;
     const apply = () => {
       const w = window.innerWidth;
-      city.setInset(session.status === "building" && w > 900 ? Math.min(380, w * 0.34) + 24 : 0);
+      city.setInset(boardShown && w > 900 ? Math.min(380, w * 0.34) + 24 : 0);
     };
     apply();
     window.addEventListener("resize", apply);
     return () => window.removeEventListener("resize", apply);
-  }, [session.status]);
+  }, [boardShown]);
 
   // Al terminar, el proyector toma la foto de cada obra y la sube: es el único que las tiene todas en
   // su escena. Sirven para votar en el celular, para el reporte y para el mural.
@@ -566,27 +567,37 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
       {session.status === "finished" && gallery.status === null && (
         <div className={styles.end}>
           {touring ? (
-            <div className={styles.spot} style={{ "--team": touring.color } as React.CSSProperties}>
+            <div className={styles.spot} style={{ "--team": touring.color } as React.CSSProperties} aria-live="polite">
+              <p className={styles.spotKicker}>
+                Obra {(tour.index % Math.max(1, teamCount)) + 1} de {teamCount}
+              </p>
               <p className={styles.spotName}>
                 <i aria-hidden="true" />
                 {touring.name}
               </p>
-              <p className={styles.spotMembers}>
-                {touring.members.map((m) => `${m.nickname} (${m.placed})`).join(" · ")}
-              </p>
+              <ul className={styles.spotMembers}>
+                {touring.members.map((m) => (
+                  <li key={m.slot}>
+                    {m.nickname}
+                    <span>{m.placed === 1 ? "1 pieza" : `${m.placed} piezas`}</span>
+                  </li>
+                ))}
+              </ul>
               {mode.play === "juntos" && <p className={styles.spotStat}>{heightLabel(live.get(touring.id)?.height ?? 0)} de alto</p>}
               {mode.play === "telefono" && (
                 <p className={styles.spotStat}>
-                  {(live.get(touring.id)?.scores ?? [0, 0])
-                    .map((sc, r) => `Ronda ${r + 1}: ${Math.round(sc * 100)} % parecido`)
-                    .join(" · ")}
+                  {(live.get(touring.id)?.scores ?? [0, 0]).map((sc, r) => (
+                    <span key={r}>
+                      Ronda {r + 1}: <b>{Math.round(sc * 100)} %</b> parecido
+                    </span>
+                  ))}
                 </p>
               )}
             </div>
           ) : (
             <div className={styles.spot}>
-              <p className={styles.spotName}>¡Tiempo!</p>
-              <p className={styles.spotMembers}>Así quedaron las obras. Recórranlas equipo por equipo y que cada uno cuente la suya.</p>
+              <p className={styles.spotTitle}>¡Tiempo!</p>
+              <p className={styles.spotText}>Así quedaron las obras. Recórranlas equipo por equipo y que cada uno cuente la suya.</p>
             </div>
           )}
           {hiddenCount > 0 && (
@@ -619,10 +630,10 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
             <Link href={`/admin/reporte/equipos/${session.id}`} className={styles.back} target="_blank">
               Reporte ›
             </Link>
-            <span className={styles.meter} title="Estimado: cada publicación por cada pantalla que la recibe">
-              {snap.ablyMessages.toLocaleString("es-CO")} mensajes de tiempo real
-            </span>
           </div>
+          <span className={styles.meter} title="Estimado: cada publicación por cada pantalla que la recibe">
+            {snap.ablyMessages.toLocaleString("es-CO")} mensajes de tiempo real
+          </span>
         </div>
       )}
     </div>
