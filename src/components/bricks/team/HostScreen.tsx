@@ -15,7 +15,7 @@ import type { Op } from "@/lib/bricks/ops";
 import type { Brick } from "@/lib/bricks/world";
 import { SeqQueue } from "@/lib/bricks/sync";
 import { MIN_GALLERY_WORKS } from "@/lib/bricks/gallery";
-import { getTeamMode, heightLabel, phoneRound, phoneScores, relayTurn, towerHeight, twistDue } from "@/lib/bricks/team";
+import { getTeamMode, heightLabel, phoneRound, phoneScores, relayTurn, teamIdentity, towerHeight, twistDue } from "@/lib/bricks/team";
 import QrCode from "@/components/live/QrCode";
 import { downloadBlob, drawMural, toJpeg } from "../mural";
 import { CityView } from "./city";
@@ -42,6 +42,11 @@ function formatClock(ms: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
+/** "8 min" o "7:30 min" para la duración de la sala. */
+function minutesLabel(seconds: number): string {
+  return `${seconds % 60 === 0 ? seconds / 60 : formatClock(seconds * 1000)} min`;
+}
+
 export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cityRef = useRef<CityView | null>(null);
@@ -59,6 +64,8 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
   const { session } = snap;
   const mode = getTeamMode(session.mode)!;
   const players = snap.teams.reduce((n, t) => n + t.members.length, 0);
+  /** Si todos los equipos están llenos, quien entre abre uno nuevo: se muestra cuál será. */
+  const nextTeam = snap.teams.every((t) => t.members.length >= session.teamSize) ? teamIdentity(snap.teams.length) : null;
 
   const measure = useCallback((teamId: number) => {
     const city = cityRef.current;
@@ -359,6 +366,12 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
           <p className={styles.kicker}>Bricks Serious Play · en equipo</p>
           <h1 className={styles.title}>{mode.title}</h1>
         </div>
+        {session.status === "lobby" && (
+          <p className={styles.meta}>
+            <span>Equipos de {session.teamSize}</span>
+            <span>{minutesLabel(session.timeLimit)}</span>
+          </p>
+        )}
         {session.status === "building" && remaining !== null && (
           <span className={`${styles.clock} ${remaining <= 30000 ? styles.clockWarn : ""}`} role="timer">
             {formatClock(remaining)}
@@ -384,49 +397,98 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
       {session.status === "lobby" && (
         <section className={styles.lobby} aria-labelledby="bh-lobby">
           <div className={styles.join}>
-            <p className={styles.kicker}>Entren desde el celular</p>
-            <p className={styles.url}>
-              {joinHost}/construir
-            </p>
-            <p className={styles.pinLabel}>PIN</p>
-            <p className={styles.pin} id="bh-lobby">
-              {session.pin.slice(0, 3)} {session.pin.slice(3)}
-            </p>
-            <QrCode value={joinUrl} size={200} label={`Código QR para entrar con el PIN ${session.pin}`} />
-            <p className={styles.prompt}>{mode.prompt}</p>
-          </div>
-          <div className={styles.teams}>
-            <div className={styles.teamsHead}>
-              <h2>
-                {players === 0 ? "Esperando a la gente" : `${players} ${players === 1 ? "persona" : "personas"} en ${snap.teams.length} ${snap.teams.length === 1 ? "equipo" : "equipos"}`}
-              </h2>
-              <span>
-                Equipos de {session.teamSize} · {formatClock(session.timeLimit * 1000)} min
-              </span>
+            <div className={styles.joinWhere}>
+              <p className={styles.joinLabel}>Entra desde el celular</p>
+              <p className={styles.url}>
+                <span>{joinHost}</span>
+                <b>/construir</b>
+              </p>
             </div>
-            <ul className={styles.teamGrid}>
-              {snap.teams.map((t) => (
-                <li key={t.id} style={{ "--team": t.color } as React.CSSProperties}>
+            <div className={styles.joinPin}>
+              <p className={styles.joinLabel}>con el PIN</p>
+              <p className={styles.pin} id="bh-lobby">
+                {session.pin.slice(0, 3)}
+                <span aria-hidden="true"> </span>
+                {session.pin.slice(3)}
+              </p>
+            </div>
+            <div className={styles.qr}>
+              <QrCode value={joinUrl} size={240} label={`Código QR para entrar con el PIN ${session.pin}`} />
+              <span>o escanea el código</span>
+            </div>
+          </div>
+
+          <ol className={styles.steps} aria-label="Cómo se juega">
+            {mode.steps.map((step, n) => (
+              <li key={n}>
+                <span aria-hidden="true">{n + 1}</span>
+                {step}
+              </li>
+            ))}
+          </ol>
+
+          <ul className={styles.teamGrid} aria-label="Equipos">
+            {snap.teams.map((t) => {
+              const used = new Map(t.members.map((m) => [m.slot, m.nickname]));
+              return (
+                <li key={t.id} className={styles.teamCard} style={{ "--team": t.color } as React.CSSProperties}>
                   <p className={styles.teamName}>
                     <i aria-hidden="true" />
                     {t.name}
+                    <span className={styles.teamCount}>
+                      {t.members.length}/{session.teamSize}
+                    </span>
                   </p>
-                  <ul>
-                    {t.members.map((m) => (
-                      <li key={m.slot}>{m.nickname}</li>
-                    ))}
-                    {Array.from({ length: Math.max(0, session.teamSize - t.members.length) }, (_, n) => (
-                      <li key={`v${n}`} className={styles.empty}>
-                        libre
-                      </li>
-                    ))}
+                  <ul className={styles.seats}>
+                    {Array.from({ length: Math.max(session.teamSize, t.members.length) }, (_, slot) => {
+                      const nick = used.get(slot);
+                      return nick !== undefined ? (
+                        <li key={`m${slot}`} className={styles.seat}>
+                          {nick}
+                        </li>
+                      ) : (
+                        <li key={`v${slot}`} className={`${styles.seat} ${styles.seatFree}`}>
+                          libre
+                        </li>
+                      );
+                    })}
                   </ul>
                 </li>
-              ))}
-            </ul>
+              );
+            })}
+            {nextTeam && (
+              <li className={`${styles.teamCard} ${styles.teamNext}`} style={{ "--team": nextTeam.color } as React.CSSProperties}>
+                <p className={styles.teamName}>
+                  <i aria-hidden="true" />
+                  {nextTeam.name}
+                </p>
+                <p className={styles.teamNextHint}>{players === 0 ? "Lo abre la primera persona que entre" : "Se abre con la próxima persona"}</p>
+              </li>
+            )}
+          </ul>
+
+          <div className={styles.lobbyFoot}>
+            <p className={styles.headcount} aria-live="polite">
+              <b>{players}</b>
+              {players === 1 ? "persona" : "personas"}
+              {snap.teams.length > 0 && (
+                <span>
+                  en {snap.teams.length} {snap.teams.length === 1 ? "equipo" : "equipos"}
+                </span>
+              )}
+            </p>
             {error && <p className={styles.error}>{error}</p>}
             <button type="button" className={styles.startBtn} onClick={() => command("start")} disabled={players === 0 || !!pending}>
-              {pending === "start" ? "Empezando…" : players === 0 ? "Esperando a la primera persona" : "¡A construir!"}
+              {pending === "start" ? (
+                "Empezando…"
+              ) : players === 0 ? (
+                <>
+                  <i className={styles.waitDot} aria-hidden="true" />
+                  Esperando a la primera persona
+                </>
+              ) : (
+                "¡A construir!"
+              )}
             </button>
           </div>
         </section>

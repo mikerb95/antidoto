@@ -204,6 +204,8 @@ export class BuilderEngine {
     this.cleanup.forEach((fn) => fn());
     this.cleanup = [];
     clearTimeout(this.gesture?.longPress);
+    if (this.kitTimer !== null) clearTimeout(this.kitTimer);
+    this.kitTimer = null;
     this.gesture = null;
     this.trayDrag = null;
     this.proposal = null;
@@ -372,23 +374,32 @@ export class BuilderEngine {
     this.refreshKitThumbs();
   }
 
-  /** Dibuja las miniaturas que faltan de la pestaña visible, cada pieza en su color. */
+  private kitTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Dibuja las miniaturas que faltan de la pestaña visible, cada pieza en su color. Va un color
+   * por vuelta, con una pausa entre medio: así la pantalla responde mientras aparecen.
+   */
   private refreshKitThumbs() {
-    if (!this.mounted || !this.stock) return;
-    const byColor = new Map<number, number[]>();
+    if (this.kitTimer !== null || !this.mounted || !this.stock) return;
+    let color = -1;
+    const parts: number[] = [];
     for (const key of this.kitWanted) {
       if (this.kitThumbs.has(key) || !this.stock.has(key)) continue;
       const [p, c] = key.split(":").map(Number);
-      byColor.set(c, [...(byColor.get(c) ?? []), p]);
+      if (color === -1) color = c;
+      if (c === color) parts.push(p);
     }
-    if (!byColor.size) return;
+    if (color === -1) return;
     const out = new Map(this.kitThumbs);
-    for (const [c, parts] of byColor) {
-      for (const [p, url] of renderThumbs(this.stage.renderer, this.stage.scene.environment, parts, c, 112)) out.set(stockKey(p, c), url);
-    }
+    for (const [p, url] of renderThumbs(this.stage.renderer, this.stage.scene.environment, parts, color, 112)) out.set(stockKey(p, color), url);
     this.kitThumbs = out;
     this.stage.request();
     this.emit();
+    this.kitTimer = setTimeout(() => {
+      this.kitTimer = null;
+      this.refreshKitThumbs();
+    }, 16);
   }
 
   private atLimit(): boolean {
