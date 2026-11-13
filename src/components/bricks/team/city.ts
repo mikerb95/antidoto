@@ -44,7 +44,7 @@ export class CityView {
       // Marco del color del equipo bajo la base: se reconoce de lejos cuál es cuál.
       const frame = new THREE.Mesh(
         new THREE.BoxGeometry(this.base + 0.8, 0.3, this.base + 0.8),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.6 }),
+        new THREE.MeshStandardMaterial({ color: frameColor(color), roughness: 0.6 }),
       );
       frame.receiveShadow = true;
       plot = { world, view, frame, origin: new THREE.Vector3() };
@@ -188,4 +188,9 @@ export class CityView {
     this.plots.clear();
     this.stage.dispose();
   }
+}
+
+/** El Equipo Verde tiene el mismo verde de la placa base: su marco va en un verde más claro para verse. */
+function frameColor(color: string): string {
+  return color.toLowerCase() === "#237841" ? "#4b9f4a" : color;
 }

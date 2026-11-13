@@ -43,7 +43,12 @@ export default function GalleryStage({ gallery, teams, pending, onReveal, onFocu
             <p className={styles.galleryHint}>Las obras van sin nombre hasta el final. Nadie puede votar por la suya.</p>
           </div>
           <div className={styles.galleryCount} role="status">
-            <b>{gallery.voters}</b> de {gallery.players} {gallery.players === 1 ? "persona votó" : "personas votaron"}
+            <p>
+              <b>{gallery.voters}</b> de {gallery.players} {gallery.players === 1 ? "persona votó" : "personas votaron"}
+            </p>
+            <span className={styles.galleryBar} aria-hidden="true">
+              <span style={{ width: `${gallery.players ? Math.min(100, (gallery.voters / gallery.players) * 100) : 0}%` }} />
+            </span>
           </div>
         </div>
         <ol className={styles.galleryGrid} style={{ "--cols": Math.min(4, Math.max(2, Math.ceil(Math.sqrt(gallery.order.length)))) } as React.CSSProperties}>
@@ -78,8 +83,8 @@ export default function GalleryStage({ gallery, teams, pending, onReveal, onFocu
     return (
       <div className={styles.end}>
         <div className={styles.spot}>
-          <p className={styles.spotName}>Gracias por votar</p>
-          <p className={styles.spotMembers}>Nadie alcanzó a votar en ninguna categoría. Igual, cada obra cuenta algo: recórranlas juntos.</p>
+          <p className={styles.spotTitle}>Gracias por votar</p>
+          <p className={styles.spotText}>Nadie alcanzó a votar en ninguna categoría. Igual, cada obra cuenta algo: recórranlas juntos.</p>
         </div>
       </div>
     );
@@ -90,22 +95,25 @@ export default function GalleryStage({ gallery, teams, pending, onReveal, onFocu
   return (
     <div className={styles.end}>
       <div className={styles.spot} style={{ "--team": winners[0].color } as React.CSSProperties} aria-live="polite">
-        <p className={styles.kicker}>
+        <p className={styles.spotKicker}>
           Categoría {step + 1} de {won.length}
         </p>
         <p className={styles.spotCategory}>{current.title}</p>
         {winners.map((w) => (
-          <div key={w.teamId}>
+          <div key={w.teamId} className={styles.winner}>
             <p className={styles.spotName} style={{ "--team": w.color } as React.CSSProperties}>
               <i aria-hidden="true" />
               {w.name}
             </p>
-            <p className={styles.spotMembers}>
+            <p className={styles.spotText}>
               Obra {w.number} · {w.members.join(" · ")}
             </p>
           </div>
         ))}
-        <p className={styles.spotStat}>{current.votes === 1 ? "1 voto" : `${current.votes} votos`}{winners.length > 1 ? " cada una: empate" : ""}</p>
+        <p className={styles.spotStat}>
+          <b>{current.votes === 1 ? "1 voto" : `${current.votes} votos`}</b>
+          {winners.length > 1 ? " cada una: empate" : ""}
+        </p>
       </div>
       <div className={styles.endActions}>
         {step > 0 && (
