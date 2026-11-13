@@ -1,11 +1,14 @@
 /* Pantalla del proyector: la escena 3D ocupa todo y los paneles flotan encima, sólidos (el blur
-   sobre WebGL cuesta). Pensada para leerse desde el fondo de una sala: textos grandes. */
+   sobre WebGL cuesta). Pensada para leerse desde el fondo de una sala: textos grandes.
+   Mundo claro, el mismo del constructor: superficies blancas, tinta oscura, celeste para la acción
+   y los colores de las fichas como acentos. */
 
 .root {
+  composes: tokens from "../tokens.module.css";
   position: fixed;
   inset: 0;
-  background: #e9eef1;
-  color: #e8f4f8;
+  background: var(--canvas);
+  color: var(--ink);
   font-family: var(--font-poppins), "Poppins", system-ui, sans-serif;
   overflow: hidden;
 }
@@ -29,19 +32,33 @@
   left: 0;
   right: 0;
   z-index: 2;
+  box-sizing: border-box;
+  height: 76px;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 22px;
-  background: #0f181d;
-  border-bottom: 1px solid rgb(128 220 255 / 0.12);
+  padding: 0 24px;
+  background: var(--surface);
+  box-shadow: 0 1px 0 var(--line), var(--lift);
 }
 
 .back {
-  color: #80dcff;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--r-pill);
+  background: var(--well);
+  color: var(--brand-ink);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 160ms ease;
+}
+
+.back:hover {
+  background: var(--brand-tint);
 }
 
 .titleBox {
@@ -55,41 +72,62 @@
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #80dcff;
+  color: var(--brand-edge);
 }
 
 .title {
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: "Cal Sans", var(--font-poppins), sans-serif;
   font-weight: 400;
   font-size: 28px;
+  line-height: 1.15;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+
+.meta span {
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: var(--well);
+  color: var(--ink-2);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .clock {
   min-width: 120px;
-  padding: 6px 18px;
-  border-radius: 16px;
-  background: #0f181d;
-  border: 1px solid rgb(128 220 255 / 0.25);
+  padding: 2px 18px;
+  border-radius: var(--r-m);
+  background: var(--well);
+  box-shadow: var(--edge);
   font-family: "Cal Sans", var(--font-poppins), sans-serif;
   font-size: 44px;
+  line-height: 1.2;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
 .clockWarn {
-  background: #fac80a;
-  border-color: #fac80a;
-  color: #0f181d;
+  background: var(--yellow);
+  box-shadow: 0 3px 0 var(--yellow-edge);
 }
 
 .pinSmall {
   font-size: 15px;
-  color: rgb(232 244 248 / 0.7);
+  color: var(--ink-3);
+  white-space: nowrap;
 }
 
 .pinSmall b {
-  color: #e8f4f8;
+  color: var(--ink);
   font-size: 22px;
   letter-spacing: 0.08em;
 }
@@ -99,149 +137,239 @@
 .startBtn {
   min-height: 46px;
   padding: 0 20px;
-  border-radius: 14px;
+  border: 0;
+  border-radius: var(--r-m);
   font: inherit;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform 80ms ease, box-shadow 80ms ease, background-color 160ms ease, color 160ms ease;
 }
 
 .ghostBtn {
-  border: 1px solid rgb(128 220 255 / 0.35);
-  background: #0f181d;
-  color: inherit;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--well-strong), 0 3px 0 var(--well-strong);
+}
+
+.ghostBtn:hover:not(:disabled) {
+  background: var(--brand-tint);
 }
 
 .dangerBtn {
-  border: 0;
-  background: #ff6d77;
-  color: #0f181d;
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--red-edge);
 }
 
 .startBtn {
-  border: 0;
-  background: #3bc8f3;
-  color: #0f181d;
-  font-size: 18px;
-  min-height: 58px;
-  box-shadow: 0 10px 30px rgb(59 200 243 / 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 0 32px;
+  background: var(--brand);
+  color: var(--ink);
+  font-size: 20px;
+  box-shadow: 0 4px 0 var(--brand-edge);
 }
 
-.startBtn:disabled,
+.startBtn:hover:not(:disabled) {
+  background: #52d0f6;
+}
+
+.ghostBtn:active:not(:disabled),
+.dangerBtn:active:not(:disabled),
+.startBtn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+
 .ghostBtn:disabled,
 .dangerBtn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: default;
+}
+
+/* Deshabilitado no es "apagado": mientras espera se lee como un rótulo tranquilo. */
+.startBtn:disabled {
+  background: var(--well);
+  color: var(--ink-2);
   box-shadow: none;
+  cursor: default;
 }
 
 .ghostBtn:focus-visible,
 .dangerBtn:focus-visible,
 .startBtn:focus-visible,
 .back:focus-visible {
-  outline: 3px solid #80dcff;
+  outline: 3px solid var(--brand-edge);
   outline-offset: 3px;
+}
+
+.waitDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--brand);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(59 200 243 / 0.55);
+  }
+  60% {
+    box-shadow: 0 0 0 10px rgb(59 200 243 / 0);
+  }
 }
 
 /* ---- Lobby ---- */
 
 .lobby {
   position: absolute;
-  inset: 84px 22px 22px;
+  inset: 96px 24px 24px;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(300px, 380px) 1fr;
-  gap: 22px;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 16px;
 }
 
-.join,
-.teams {
-  border-radius: 24px;
-  background: rgb(15 24 29 / 0.94);
-  border: 1px solid rgb(128 220 255 / 0.16);
-  padding: 26px;
-  overflow-y: auto;
-}
-
+/* Franja de entrada: dónde, con qué PIN y el QR. Lo que se lee desde el fondo de la sala. */
 .join {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 10px;
-  text-align: center;
+  gap: clamp(20px, 3vw, 48px);
+  padding: clamp(18px, 2vw, 28px) clamp(20px, 2.6vw, 36px);
+  border-radius: var(--r-l);
+  background: var(--surface);
+  box-shadow: var(--float);
+}
+
+.joinLabel {
+  margin: 0 0 6px;
+  font-size: clamp(15px, 1.2vw, 20px);
+  font-weight: 600;
+  color: var(--ink-3);
 }
 
 .url {
+  display: flex;
+  flex-direction: column;
   margin: 0;
-  font-size: 22px;
-  font-weight: 600;
+  font-family: "Cal Sans", var(--font-poppins), sans-serif;
+  font-size: clamp(24px, 2.4vw, 44px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
-.pinLabel {
-  margin: 8px 0 0;
-  font-size: 13px;
-  letter-spacing: 0.2em;
-  color: rgb(232 244 248 / 0.6);
+.url b {
+  font-weight: 400;
+  color: var(--brand-edge);
+}
+
+.joinPin {
+  text-align: center;
 }
 
 .pin {
-  margin: 0 0 8px;
+  margin: 0;
+  padding: 0.06em 0.28em 0.02em;
+  border-radius: var(--r-l);
+  background: var(--yellow);
+  box-shadow: 0 6px 0 var(--yellow-edge);
   font-family: "Cal Sans", var(--font-poppins), sans-serif;
-  font-size: 72px;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  color: #fac80a;
+  font-size: clamp(64px, 7.4vw, 140px);
+  line-height: 1.05;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.prompt {
-  margin: 10px 0 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: rgb(232 244 248 / 0.8);
-}
-
-.teams {
+.qr {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink-3);
 }
 
-.teamsHead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+.qr svg {
+  width: clamp(150px, 13vw, 240px);
+  height: auto;
+  box-shadow: inset 0 0 0 1.5px var(--well-strong);
 }
 
-.teamsHead h2 {
-  margin: 0;
-  font-family: "Cal Sans", var(--font-poppins), sans-serif;
-  font-weight: 400;
-  font-size: 30px;
-}
-
-.teamsHead span {
-  font-size: 15px;
-  color: rgb(232 244 248 / 0.65);
-}
-
-.teamGrid {
-  flex: 1;
+/* Cómo se juega, en tres pasos con número de ficha. */
+.steps {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  align-content: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.teamGrid > li {
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--team) 12%, #16222a);
-  animation: pop 320ms cubic-bezier(0.2, 0.9, 0.3, 1.3);
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--r-m);
+  background: var(--surface);
+  box-shadow: var(--lift);
+  font-size: clamp(15px, 1.15vw, 20px);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.steps li span {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-s);
+  background: var(--brand);
+  box-shadow: 0 3px 0 var(--brand-edge);
+  font-family: "Cal Sans", var(--font-poppins), sans-serif;
+  font-size: 20px;
+}
+
+.steps li:nth-child(2) span {
+  background: var(--yellow);
+  box-shadow: 0 3px 0 var(--yellow-edge);
+}
+
+.steps li:nth-child(3) span {
+  background: var(--red);
+  box-shadow: 0 3px 0 var(--red-edge);
+  color: #fff;
+}
+
+/* Equipos: flotan sobre la placa 3D, que se asoma entre las tarjetas. */
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  margin: 0;
+  padding: 2px 2px 8px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.teamCard {
+  padding: 14px 16px 16px;
+  border-radius: var(--r-l);
+  background: var(--surface);
+  box-shadow: var(--float);
+  animation: pop 360ms var(--ease-spring);
 }
 
 @keyframes pop {
@@ -251,46 +379,131 @@
   }
 }
 
-.teamGrid ul {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: 17px;
-}
-
-.empty {
-  color: rgb(232 244 248 / 0.35);
-  font-style: italic;
-}
-
 .teamName {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 10px;
   margin: 0;
   font-weight: 600;
-  font-size: 17px;
+  font-size: 18px;
 }
 
+/* Punto de color con relieve, como el stud de una ficha vista desde arriba. */
 .teamName i,
 .spotName i {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   background: var(--team);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--team) 30%, transparent);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.22), inset 0 2px 0 rgb(255 255 255 / 0.35);
+}
+
+.teamCount {
+  margin-left: auto;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.seat {
+  max-width: 100%;
+  padding: 6px 12px;
+  overflow: hidden;
+  border-radius: var(--r-s);
+  background: color-mix(in srgb, var(--team) 16%, #fff);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--team) 34%, #fff);
+  font-size: 17px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: snap 300ms var(--ease-spring);
+}
+
+/* Cada persona que entra cae en su puesto como una ficha que encaja. */
+@keyframes snap {
+  from {
+    transform: translateY(-14px);
+    opacity: 0;
+  }
+}
+
+.seatFree {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--well-strong);
+  color: #a9b5bc;
+  font-weight: 500;
+  font-style: italic;
+  animation: none;
+}
+
+.teamNext {
+  background: rgb(255 255 255 / 0.72);
+  box-shadow: inset 0 0 0 2px var(--well-strong);
+  color: var(--ink-2);
+}
+
+.teamNext .teamName i {
+  opacity: 0.55;
+}
+
+.teamNextHint {
+  margin: 10px 0 0;
+  font-size: 15px;
+  color: var(--ink-3);
+}
+
+.lobbyFoot {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 12px 12px 24px;
+  border-radius: var(--r-l);
+  background: var(--surface);
+  box-shadow: var(--float);
+}
+
+.headcount {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 auto 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.headcount b {
+  font-family: "Cal Sans", var(--font-poppins), sans-serif;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.headcount span {
+  font-weight: 500;
+  color: var(--ink-3);
 }
 
 .error {
   margin: 0;
   padding: 10px 14px;
-  border-radius: 12px;
-  background: rgb(255 109 119 / 0.16);
-  color: #ffb3b8;
-  font-size: 14px;
+  border-radius: var(--r-s);
+  background: var(--red-tint);
+  color: var(--red-edge);
+  font-size: 15px;
+  font-weight: 600;
 }
 
 /* ---- Tablero mientras construyen ---- */
@@ -307,6 +520,7 @@
 }
 
 .boardPrompt {
+  color: #e8f4f8; /* provisional: panel oscuro hasta pasarlo a claro */
   margin: 0;
   padding: 14px 16px;
   border-radius: 16px;
@@ -332,6 +546,7 @@
 }
 
 .ranking li {
+  color: #e8f4f8; /* provisional: panel oscuro hasta pasarlo a claro */
   display: flex;
   align-items: center;
   gap: 10px;
@@ -374,6 +589,7 @@
 }
 
 .spot {
+  color: #e8f4f8; /* provisional: panel oscuro hasta pasarlo a claro */
   padding: 20px 24px;
   border-radius: 22px;
   background: rgb(15 24 29 / 0.94);
@@ -412,12 +628,13 @@
 
 .meter {
   font-size: 13px;
-  color: rgb(232 244 248 / 0.55);
+  color: var(--ink-3);
 }
 
 /* ---- Galería de cierre ---- */
 
 .gallery {
+  color: #e8f4f8; /* provisional: panel oscuro hasta pasarlo a claro */
   position: absolute;
   inset: 84px 22px 22px;
   z-index: 1;
@@ -544,13 +761,38 @@
 .notice {
   margin: 0;
   font-size: 15px;
-  color: rgb(232 244 248 / 0.75);
+  color: var(--ink-2);
+}
+
+@media (max-width: 1100px) {
+  .join {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .joinPin {
+    grid-row: 2;
+    grid-column: 1;
+    text-align: left;
+  }
+
+  .qr {
+    grid-row: 1 / 3;
+    grid-column: 2;
+  }
 }
 
 @media (max-width: 900px) {
   .lobby {
-    grid-template-columns: 1fr;
+    grid-template-rows: none;
     overflow-y: auto;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .meta {
+    display: none;
   }
 
   .board {
@@ -559,7 +801,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .teamGrid > li {
+  .teamCard,
+  .seat,
+  .waitDot {
     animation: none;
   }
 }
