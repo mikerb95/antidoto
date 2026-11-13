@@ -708,7 +708,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
-  max-width: min(680px, calc(100vw - min(380px, 34vw) - 72px));
+  max-width: min(860px, calc(100vw - min(380px, 34vw) - 72px));
 }
 
 .spot {
@@ -820,6 +820,13 @@
   border-radius: var(--r-l);
   background: var(--surface);
   box-shadow: var(--float);
+}
+
+.endActions .startBtn {
+  min-height: 46px;
+  padding: 0 22px;
+  font-size: 16px;
+  box-shadow: 0 3px 0 var(--brand-edge);
 }
 
 .meter {
@@ -934,14 +941,15 @@
   min-height: 0;
   overflow: hidden;
   border-radius: var(--r-m);
-  background: var(--well);
+  background: #e6ebee;
   box-shadow: 0 3px 0 var(--well-strong);
 }
 
+/* La obra entera, aunque sobre aire a los lados: recortada se pierde la punta de las torres. */
 .galleryGrid img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
