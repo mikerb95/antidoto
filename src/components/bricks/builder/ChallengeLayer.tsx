@@ -336,10 +336,17 @@ function Intro({ challenge, session, onModel, onStart }: { challenge: PublicBuil
             <b>{timeLimit ? formatLimit(timeLimit) : "Sin reloj"}</b>
             <span>{timeLimit ? "desde que empiezas" : "a tu ritmo"}</span>
           </li>
-          <li>
-            <b>{maxPieces ? `${maxPieces} piezas` : "Piezas libres"}</b>
-            <span>{maxPieces ? "ni una más" : "todas las que quieras"}</span>
-          </li>
+          {challenge.kit ? (
+            <li>
+              <b>Kit {challenge.kit.name}</b>
+              <span>{maxPieces ? `${maxPieces} de sus ${challenge.kit.total} piezas` : `solo sus ${challenge.kit.total} piezas`}</span>
+            </li>
+          ) : (
+            <li>
+              <b>{maxPieces ? `${maxPieces} piezas` : "Piezas libres"}</b>
+              <span>{maxPieces ? "ni una más" : "todas las que quieras"}</span>
+            </li>
+          )}
           {challenge.story && (
             <li>
               <b>Título y frase</b>
