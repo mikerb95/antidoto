@@ -518,69 +518,184 @@
 
 .board {
   position: absolute;
-  top: 124px;
-  right: 22px;
+  top: 96px;
+  right: 24px;
+  bottom: 24px;
   z-index: 1;
-  width: min(340px, 34vw);
+  width: min(380px, 34vw);
   display: flex;
   flex-direction: column;
   gap: 12px;
+  pointer-events: none;
 }
 
-.boardPrompt {
-  color: #e8f4f8; /* provisional: panel oscuro hasta pasarlo a claro */
+.board > * {
+  pointer-events: auto;
+}
+
+.boardCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r-l);
+  background: var(--surface);
+  box-shadow: var(--float);
+}
+
+.boardSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin: 0;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgb(15 24 29 / 0.92);
-  font-size: 15px;
-  line-height: 1.5;
+  padding: 0;
+  list-style: none;
 }
 
-.twist {
-  background: #d3359d;
-  color: #fff;
+.boardSteps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
   font-weight: 600;
+  line-height: 1.3;
+}
+
+.boardSteps li span {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-s);
+  background: var(--brand);
+  box-shadow: 0 3px 0 var(--brand-edge);
+  font-family: "Cal Sans", var(--font-poppins), sans-serif;
   font-size: 17px;
+}
+
+.boardSteps li:nth-child(2) span {
+  background: var(--yellow);
+  box-shadow: 0 3px 0 var(--yellow-edge);
+}
+
+.boardSteps li:nth-child(3) span {
+  background: var(--red);
+  box-shadow: 0 3px 0 var(--red-edge);
+  color: #fff;
+}
+
+.round {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--r-m);
+  background: var(--brand-tint);
+  color: var(--brand-ink);
+  font-size: 15px;
+}
+
+.round b {
+  font-family: "Cal Sans", var(--font-poppins), sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+/* La sorpresa del Relevo tiene que verse desde el fondo: grande, en magenta de ficha, y entra con salto. */
+.twist {
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: var(--r-l);
+  background: #d3359d;
+  box-shadow: 0 5px 0 #9c2373, var(--float);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.35;
+  animation: twistIn 520ms var(--ease-spring);
+}
+
+.twist b {
+  display: block;
+  font-family: "Cal Sans", var(--font-poppins), sans-serif;
+  font-size: 30px;
+  font-weight: 400;
+}
+
+@keyframes twistIn {
+  from {
+    transform: scale(0.85) rotate(-2deg);
+    opacity: 0;
+  }
 }
 
 .ranking {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
   margin: 0;
-  padding: 0;
+  padding: 2px 2px 8px;
+  overflow-y: auto;
   list-style: none;
 }
 
 .ranking li {
-  color: #e8f4f8; /* provisional: panel oscuro hasta pasarlo a claro */
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: rgb(15 24 29 / 0.92);
-  transition: transform 300ms ease;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border-radius: var(--r-m);
+  background: var(--surface);
+  box-shadow: var(--lift);
+  transition: transform 300ms var(--ease-out), background-color 300ms ease;
+}
+
+.ranking .teamName {
+  min-width: 0;
+  font-size: 18px;
 }
 
 .ranking li[aria-current="true"] {
-  background: color-mix(in srgb, var(--team) 30%, #0f181d);
-  transform: translateX(-8px);
+  background: color-mix(in srgb, var(--team) 18%, #fff);
+  transform: translateX(-10px);
 }
 
 .place {
-  width: 28px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-s);
+  background: var(--well);
+  box-shadow: 0 3px 0 var(--well-strong);
   font-family: "Cal Sans", var(--font-poppins), sans-serif;
-  font-size: 22px;
-  color: #fac80a;
+  font-size: 19px;
+  color: var(--ink-2);
+}
+
+.place[data-first] {
+  background: var(--yellow);
+  box-shadow: 0 3px 0 var(--yellow-edge);
+  color: var(--ink);
 }
 
 .stat {
+  flex: none;
   margin-left: auto;
-  font-size: 15px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--well);
+  font-size: 16px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: rgb(232 244 248 / 0.8);
+  color: var(--ink-2);
+  white-space: nowrap;
 }
 
 /* ---- Cierre ---- */
@@ -809,6 +924,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .twist,
   .teamCard,
   .seat,
   .waitDot {

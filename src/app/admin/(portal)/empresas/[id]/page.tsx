@@ -131,6 +131,7 @@ export default async function EmpresaPage({
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           {isSuper && !company.archived ? (
             <>
+              <span data-guide="empresa-ajustes" style={{ display: "inline-flex" }}>
               <DropdownMenu
                 label={
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -152,8 +153,10 @@ export default async function EmpresaPage({
                   <p style={menuHint}>Para cuando ya no trabajas con ella: sus códigos dejan de funcionar. No se borra nada y se puede restaurar.</p>
                 </form>
               </DropdownMenu>
+              </span>
               <Link
                 href={`/admin/asignar?empresa=${company.id}`}
+                data-guide="empresa-asignar"
                 className="btn-filled"
                 style={{ ...filledButton, display: "inline-flex", alignItems: "center" }}
               >
@@ -163,6 +166,7 @@ export default async function EmpresaPage({
           ) : (
             <Link
               href={`/admin/empresas/${company.id}/marca`}
+              data-guide="empresa-ajustes"
               className="btn-secondary"
               style={{ ...secondaryButton, display: "inline-flex", alignItems: "center" }}
             >
@@ -203,7 +207,7 @@ export default async function EmpresaPage({
         const total = codes.reduce((s, a) => s + a.participantes, 0);
         const done = codes.reduce((s, a) => s + a.completaron, 0);
         return (
-          <section key={first.mission_id} style={{ ...card, padding: 0 }} aria-labelledby={`act-${first.mission_id}`}>
+          <section key={first.mission_id} data-guide="actividad" style={{ ...card, padding: 0 }} aria-labelledby={`act-${first.mission_id}`}>
             <div style={{ padding: "20px 22px 0", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: colors.accent, letterSpacing: 0.8 }}>{first.tag}</span>
@@ -226,6 +230,7 @@ export default async function EmpresaPage({
                   {done > 0 && (
                     <Link
                       href={`/admin/reporte/certificados/${first.mission_id}/${company.id}`}
+                      data-guide="actividad-certificados"
                       className="btn-secondary"
                       style={{ ...secondaryButton, height: 40, display: "inline-flex", alignItems: "center" }}
                     >
@@ -234,6 +239,7 @@ export default async function EmpresaPage({
                   )}
                   <Link
                     href={`/admin/empresas/${company.id}/actividades/${first.mission_id}`}
+                    data-guide="actividad-resultados"
                     className="btn-secondary"
                     style={{ ...secondaryButton, height: 40, display: "inline-flex", alignItems: "center", gap: 6 }}
                   >

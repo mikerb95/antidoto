@@ -24,7 +24,7 @@ export default function PortalUsersPanel({ title, intro, users, companyId, curre
   const activeSupers = companyId === null ? users.filter((u) => !u.disabled).length : 0;
 
   return (
-    <section style={{ ...card, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 14 }} aria-labelledby={`usuarios-${companyId ?? "super"}`}>
+    <section data-guide="usuarios" style={{ ...card, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 14 }} aria-labelledby={`usuarios-${companyId ?? "super"}`}>
       <div>
         <h2 id={`usuarios-${companyId ?? "super"}`} style={{ ...calSans, fontSize: 18, margin: 0, color: colors.ink, fontWeight: 400 }}>
           {title}

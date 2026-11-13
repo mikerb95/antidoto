@@ -257,6 +257,7 @@ export default function BrandEditor({ companyId, initial, canRename, cancelHref 
         )}
         <button
           type="submit"
+          data-guide="marca-guardar"
           className="btn-filled"
           disabled={pending || processing || !validPrimary || (canRename && !name.trim())}
           style={{ ...filledButton, height: 44, padding: "0 22px", opacity: pending || processing || !validPrimary || (canRename && !name.trim()) ? 0.55 : 1 }}
@@ -273,7 +274,7 @@ export default function BrandEditor({ companyId, initial, canRename, cancelHref 
 function Section({ step, title, hint, optional, children }: { step: number; title: string; hint: string; optional?: boolean; children: React.ReactNode }) {
   const id = useId();
   return (
-    <section aria-labelledby={id} style={{ background: "#fff", borderRadius: 18, padding: "20px 22px 22px", boxShadow: colors.cardShadowSmall, display: "flex", flexDirection: "column", gap: 16 }}>
+    <section aria-labelledby={id} data-guide={`marca-${step}`} style={{ background: "#fff", borderRadius: 18, padding: "20px 22px 22px", boxShadow: colors.cardShadowSmall, display: "flex", flexDirection: "column", gap: 16 }}>
       <header style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
         <span aria-hidden style={{ width: 26, height: 26, borderRadius: 8, background: colors.accentTint, color: colors.accentDark, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 700, flexShrink: 0 }}>
           {step}

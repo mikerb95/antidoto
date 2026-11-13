@@ -494,28 +494,44 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
 
       {session.status !== "lobby" && gallery.status !== "voting" && (
         <aside className={styles.board} aria-label="Equipos">
-          {session.status === "building" && <p className={styles.boardPrompt}>{mode.prompt}</p>}
-          {round !== null && (
-            <p className={styles.boardPrompt}>
-              <b>Ronda {round + 1} de 2.</b> {round === 0 ? "A mitad del tiempo cambian de rol, con otro modelo." : "Cambiaron de rol: ahora describe quien antes construía."}
+          {twist && (
+            <p className={styles.twist} role="status">
+              <b>¡Sorpresa!</b> {twist.replace(/^¡Sorpresa!\s*/, "")}
             </p>
           )}
-          {twist && <p className={`${styles.boardPrompt} ${styles.twist}`}>{twist}</p>}
+          {session.status === "building" && (
+            <div className={styles.boardCard}>
+              {round !== null && (
+                <p className={styles.round}>
+                  <b>Ronda {round + 1} de 2</b>
+                  <span>{round === 0 ? "A mitad del tiempo cambian de rol" : "Cambiaron: ahora describe quien construía"}</span>
+                </p>
+              )}
+              <ol className={styles.boardSteps} aria-label="Cómo se juega">
+                {mode.steps.map((step, n) => (
+                  <li key={n}>
+                    <span aria-hidden="true">{n + 1}</span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
           <ol className={styles.ranking}>
-            {ranked.map((t, n) => {
-              return (
-                <li key={t.id} style={{ "--team": t.color } as React.CSSProperties} aria-current={touring?.id === t.id || undefined}>
-                  {mode.play === "juntos" && <span className={styles.place}>{n + 1}</span>}
-                  <span className={styles.teamName}>
-                    <i aria-hidden="true" />
-                    {t.name}
+            {ranked.map((t, n) => (
+              <li key={t.id} style={{ "--team": t.color } as React.CSSProperties} aria-current={touring?.id === t.id || undefined}>
+                {mode.play === "juntos" && (
+                  <span className={styles.place} data-first={n === 0 || undefined}>
+                    {n + 1}
                   </span>
-                  <span className={styles.stat}>
-                    {statOf(t)}
-                  </span>
-                </li>
-              );
-            })}
+                )}
+                <span className={styles.teamName}>
+                  <i aria-hidden="true" />
+                  <span>{t.name}</span>
+                </span>
+                <span className={styles.stat}>{statOf(t)}</span>
+              </li>
+            ))}
           </ol>
           {error && <p className={styles.error}>{error}</p>}
         </aside>

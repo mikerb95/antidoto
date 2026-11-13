@@ -42,7 +42,7 @@ export default async function JuegosPage({
           </p>
         </div>
         <form action={createGame}>
-          <button type="submit" className="btn-filled" style={filledButton}>
+          <button type="submit" data-guide="juego-nuevo" className="btn-filled" style={filledButton}>
             ＋ Nuevo juego
           </button>
         </form>

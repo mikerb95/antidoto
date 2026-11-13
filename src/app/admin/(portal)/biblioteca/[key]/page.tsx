@@ -74,7 +74,7 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ ke
           const texts = riskTexts(risk, overrides);
           const edited = overrides.has(risk.id);
           return (
-            <section key={risk.id} style={{ ...card, padding: 20 }} aria-labelledby={`riesgo-${risk.id}`}>
+            <section key={risk.id} data-guide="riesgo" style={{ ...card, padding: 20 }} aria-labelledby={`riesgo-${risk.id}`}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
                 <span style={numberBadge}>{n + 1}</span>
                 <h3 id={`riesgo-${risk.id}`} style={{ ...calSans, fontSize: 16.5, margin: 0, color: colors.ink }}>

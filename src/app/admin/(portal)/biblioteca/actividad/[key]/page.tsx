@@ -118,12 +118,13 @@ export default async function ActividadPage({ params }: { params: Promise<{ key:
                 <div style={cardFooter}>
                   <Link
                     href={`/admin/escena/${def.key}`}
+                    data-guide="estacion-probar"
                     className="btn-secondary"
                     style={{ ...secondaryButton, height: 36, display: "inline-flex", alignItems: "center" }}
                   >
                     Probar
                   </Link>
-                  <Link href={`/admin/biblioteca/${def.key}`} className="btn-text" style={textLink}>
+                  <Link href={`/admin/biblioteca/${def.key}`} data-guide="estacion-editar" className="btn-text" style={textLink}>
                     {isSuper ? "Editar textos" : "Ver riesgos"}
                     <ArrowRightIcon />
                   </Link>

@@ -202,6 +202,7 @@ export default function GameEditor({ gameId, archived, readOnlyReason, companies
             {!message && dirty && <span style={{ fontSize: 13, color: colors.muted }}>Cambios sin guardar</span>}
             <button
               type="button"
+              data-guide="juego-guardar"
               className="btn-filled"
               style={{ ...filledButton, opacity: !dirty || saving ? 0.6 : 1 }}
               disabled={!dirty || saving}
@@ -213,7 +214,7 @@ export default function GameEditor({ gameId, archived, readOnlyReason, companies
         </div>
       )}
 
-      <section style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
+      <section data-guide="juego-datos" style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
         <Field label="Nombre del juego" htmlFor="title" error={errors.title}>
           <input
             id="title"
@@ -293,7 +294,7 @@ export default function GameEditor({ gameId, archived, readOnlyReason, companies
       )}
 
       {!readOnly && questions.length < LIMITS.questions && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+        <div data-guide="juego-preguntas" style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           {QUESTION_TYPES.map((t) => (
             <button
               key={t.type}

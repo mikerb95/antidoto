@@ -57,7 +57,7 @@ export default async function BibliotecaPage({ searchParams }: { searchParams: P
         </p>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 22 }}>
+      <div data-guide="biblioteca-filtros" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 22 }}>
         {[
           { label: "Todas", on: filter === null, href: "/admin/biblioteca", count: activities.length + builds.length + TEAM_MODES.length + games.length },
           { label: "Escenas interactivas", on: filter === "escenas", href: "/admin/biblioteca?tipo=escenas", count: activities.length },
@@ -87,7 +87,7 @@ export default async function BibliotecaPage({ searchParams }: { searchParams: P
           activities.map(({ key, name, description, tag, stations, usage }) => {
             const risks = stations.reduce((n, s) => n + s.risks.length, 0);
             return (
-              <article key={key} className="mission-card-link" style={cardShell}>
+              <article key={key} data-guide="biblioteca-escena" className="mission-card-link" style={cardShell}>
                 <Link href={`/admin/biblioteca/actividad/${key}`} aria-label={`Abrir ${name}`} style={{ position: "relative", display: "block" }}>
                   <SceneThumb scene={stations[0].scene} label={`Escena de ${name}`} />
                   <TypeChip type="escenas" />

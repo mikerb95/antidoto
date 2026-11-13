@@ -47,13 +47,14 @@ export default function CodeShare({ code, joinUrl, host, activity, company, shar
   const small = { ...secondaryButton, height: 36, fontSize: 13, display: "inline-flex", alignItems: "center", textDecoration: "none" };
 
   return (
-    <div style={{ padding: "10px 0 12px" }}>
+    <div data-guide="codigo" style={{ padding: "10px 0 12px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
         {children}
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           {shareable && (
             <button
               type="button"
+              data-guide="codigo-compartir"
               className="btn-secondary"
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
@@ -62,7 +63,11 @@ export default function CodeShare({ code, joinUrl, host, activity, company, shar
               {open ? "Ocultar" : "Compartir"}
             </button>
           )}
-          {actions}
+          {actions && (
+            <span data-guide="codigo-opciones" style={{ display: "inline-flex" }}>
+              {actions}
+            </span>
+          )}
         </div>
       </div>
       {shareable && open && (

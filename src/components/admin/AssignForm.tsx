@@ -47,7 +47,7 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
 
   return (
     <form action={action} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <fieldset style={fieldset}>
+      <fieldset data-guide="asignar-empresa" style={fieldset}>
         <legend style={legend}>
           <Step n={1} /> ¿Para qué empresa?
         </legend>
@@ -79,7 +79,7 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
         </span>
       </fieldset>
 
-      <fieldset style={fieldset}>
+      <fieldset data-guide="asignar-actividad" style={fieldset}>
         <legend style={legend}>
           <Step n={2} /> ¿Qué actividad?
         </legend>
@@ -110,7 +110,7 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
       </fieldset>
 
       {withKit && (
-        <fieldset style={fieldset}>
+        <fieldset data-guide="asignar-kit" style={fieldset}>
           <legend style={legend}>
             <Step n={3} /> ¿Con qué kit de piezas?
           </legend>
@@ -136,7 +136,7 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
         </fieldset>
       )}
 
-      <fieldset style={fieldset}>
+      <fieldset data-guide="asignar-fecha" style={fieldset}>
         <legend style={legend}>
           <Step n={withKit ? 4 : 3} /> ¿Hasta cuándo se puede jugar?&nbsp;<span style={{ fontWeight: 400, color: colors.muted, fontSize: 13 }}>(opcional)</span>
         </legend>
@@ -149,7 +149,7 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
         <span style={{ fontSize: 12.5, color: colors.muted }}>Si lo dejas vacío, el código funciona hasta que lo pauses o lo quites. Lo puedes cambiar después.</span>
       </fieldset>
 
-      <fieldset style={fieldset}>
+      <fieldset data-guide="asignar-datos" style={fieldset}>
         <legend style={legend}>
           <Step n={withKit ? 5 : 4} /> ¿Qué datos le pedimos a cada participante?
         </legend>
@@ -207,7 +207,7 @@ export default function AssignForm({ companies, activities, defaultCompany, defa
         </p>
       )}
 
-      <button type="submit" disabled={pending} className="btn-filled" style={{ ...filledButton, height: 50, alignSelf: "flex-start", padding: "0 26px", fontSize: 15, opacity: pending ? 0.6 : 1 }}>
+      <button type="submit" data-guide="asignar-enviar" disabled={pending} className="btn-filled" style={{ ...filledButton, height: 50, alignSelf: "flex-start", padding: "0 26px", fontSize: 15, opacity: pending ? 0.6 : 1 }}>
         {pending ? "Creando el código…" : "Asignar y crear código"}
       </button>
     </form>

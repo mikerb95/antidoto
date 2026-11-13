@@ -30,7 +30,7 @@ export default async function EmpresasPage({ searchParams }: { searchParams: Pro
             Entra a una empresa para asignarle actividades, ver cómo va cada una y descargar su informe.
           </p>
         </div>
-        <Link href="/admin/empresas/nueva" className="btn-filled" style={{ ...filledButton, display: "inline-flex", alignItems: "center" }}>
+        <Link href="/admin/empresas/nueva" data-guide="empresa-nueva" className="btn-filled" style={{ ...filledButton, display: "inline-flex", alignItems: "center" }}>
           ＋ Nueva empresa
         </Link>
       </div>
@@ -68,7 +68,7 @@ export default async function EmpresasPage({ searchParams }: { searchParams: Pro
               : `${c.activities} ${c.activities === 1 ? "actividad" : "actividades"} · ${c.participantes} ${c.participantes === 1 ? "participante" : "participantes"}`;
           return (
             <li key={c.id} className="company-card" style={{ background: "#fff", borderRadius: 18, overflow: "hidden", boxShadow: colors.cardShadowSmall, display: "flex", flexDirection: "column" }}>
-              <Link href={`/admin/empresas/${c.id}`} style={{ display: "flex", flexDirection: "column", color: "inherit", textDecoration: "none", flex: 1 }}>
+              <Link href={`/admin/empresas/${c.id}`} data-guide="empresa-tarjeta" style={{ display: "flex", flexDirection: "column", color: "inherit", textDecoration: "none", flex: 1 }}>
                 <div
                   style={{
                     height: 96,

@@ -42,7 +42,7 @@ export default function PlayPanel({ gameId, blockedReason }: Props) {
   const max = new Date(now.getTime() + CHALLENGE_MAX_DAYS * 86_400_000);
 
   return (
-    <section style={{ ...card, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 14 }}>
+    <section data-guide="juego-jugar" style={{ ...card, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 14 }}>
       {blocked && <span style={{ fontSize: 13, color: colors.muted, lineHeight: 1.5 }}>{blockedReason}</span>}
 
       <div style={row}>
