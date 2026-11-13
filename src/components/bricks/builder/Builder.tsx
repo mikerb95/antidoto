@@ -422,7 +422,9 @@ export default function Builder(props: BuilderProps) {
             className={`${styles.coach} ${challenge ? styles.coachLow : ""}`}
             role="status"
           >
-            {snap.count <= 1 ? (
+            {snap.count === 0 ? (
+              "Arrastra una pieza de la bandeja hasta la base"
+            ) : snap.count === 1 ? (
               "Prueba poner una pieza encima de la que ya está"
             ) : (
               <span>
