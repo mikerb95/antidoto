@@ -408,6 +408,11 @@
   cursor: pointer;
 }
 
+/* La guía del primer minuto va arriba al centro: mientras se ve, la lista del equipo baja. */
+:global([data-coach]) .info {
+  top: 128px;
+}
+
 @media (max-width: 420px) {
   .turn {
     top: 62px;
@@ -417,6 +422,10 @@
   /* En el celular el aviso del turno o la ronda ocupa el ancho: la lista del equipo va debajo. */
   .turn ~ .info {
     top: 116px;
+  }
+
+  :global([data-coach]) .turn ~ .info {
+    top: 180px;
   }
 }
 

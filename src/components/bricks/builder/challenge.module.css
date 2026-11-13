@@ -384,13 +384,16 @@
   background: var(--well);
 }
 
+/* La foto manda en su tamaño: sin franjas a los lados, con las esquinas redondeadas de la propia foto. */
 .photo {
   display: block;
-  width: 100%;
+  align-self: center;
+  width: auto;
+  max-width: 100%;
+  height: auto;
   max-height: 42vh;
-  object-fit: contain;
   border-radius: var(--r-m);
-  background: var(--well);
+  box-shadow: 0 0 0 1px var(--line);
 }
 
 .photoSkeleton {

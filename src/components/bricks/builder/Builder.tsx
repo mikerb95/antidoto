@@ -359,7 +359,8 @@ export default function Builder(props: BuilderProps) {
         </button>
       </header>
 
-      <div className={styles.stage}>
+      {/* data-coach: con la guía arriba, lo que flota en la esquina (el equipo) baja para no quedar tapado. */}
+      <div className={styles.stage} data-coach={step !== null || undefined}>
         <canvas ref={canvasRef} className={styles.canvas} />
         <button
           type="button"
