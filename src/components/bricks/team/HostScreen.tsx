@@ -407,9 +407,7 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
             <div className={styles.joinPin}>
               <p className={styles.joinLabel}>con el PIN</p>
               <p className={styles.pin} id="bh-lobby">
-                {session.pin.slice(0, 3)}
-                <span aria-hidden="true"> </span>
-                {session.pin.slice(3)}
+                {session.pin.slice(0, 3)} {session.pin.slice(3)}
               </p>
             </div>
             <div className={styles.qr}>
@@ -434,7 +432,7 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
                 <li key={t.id} className={styles.teamCard} style={{ "--team": t.color } as React.CSSProperties}>
                   <p className={styles.teamName}>
                     <i aria-hidden="true" />
-                    {t.name}
+                    <span>{t.name}</span>
                     <span className={styles.teamCount}>
                       {t.members.length}/{session.teamSize}
                     </span>
@@ -460,7 +458,7 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
               <li className={`${styles.teamCard} ${styles.teamNext}`} style={{ "--team": nextTeam.color } as React.CSSProperties}>
                 <p className={styles.teamName}>
                   <i aria-hidden="true" />
-                  {nextTeam.name}
+                  <span>{nextTeam.name}</span>
                 </p>
                 <p className={styles.teamNextHint}>{players === 0 ? "Lo abre la primera persona que entre" : "Se abre con la próxima persona"}</p>
               </li>

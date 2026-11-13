@@ -17,6 +17,7 @@ export const colors = {
   buttonShadow: "0 12px 24px rgba(28,153,202,0.35)",
 };
 
-export const LOGO_SRC = "https://antidotocolombia.com/antidoto.svg";
+// Copia local: el sitio principal ya no sirve el archivo y además bloquea que otros dominios lo carguen.
+export const LOGO_SRC = "/antidoto.svg";
 
 export const calSans = { fontFamily: "'Cal Sans', sans-serif" } as const;

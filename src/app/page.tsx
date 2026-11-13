@@ -21,7 +21,7 @@ const JSON_LD = {
       "@id": "https://actividades.antidotocolombia.com/#organization",
       name: "Antídoto",
       url: "https://antidotocolombia.com",
-      logo: "https://antidotocolombia.com/antidoto.svg",
+      logo: "https://actividades.antidotocolombia.com/antidoto.svg",
     },
     {
       "@type": "WebSite",
