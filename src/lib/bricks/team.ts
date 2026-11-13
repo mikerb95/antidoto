@@ -23,6 +23,8 @@ export interface TeamMode {
   description: string;
   /** Lo que ve cada equipo al empezar. */
   prompt: string;
+  /** Lo mismo en tres pasos cortos, para leerlo desde el fondo de la sala en el proyector. */
+  steps: [string, string, string];
   /** Duraciones que el anfitrión puede elegir, en segundos; la primera es la sugerida. */
   times: number[];
   /** Piezas por equipo; null = sin límite. */
@@ -44,6 +46,7 @@ export const TEAM_MODES: TeamMode[] = [
     times: [180, 120, 300],
     maxPieces: 30,
     play: "juntos",
+    steps: ["Entre todos, una sola torre", "30 piezas para todo el equipo", "Gana la más alta al acabar el tiempo"],
     sizes: [4, 3, 5],
   },
   {
@@ -55,6 +58,7 @@ export const TEAM_MODES: TeamMode[] = [
     times: [480, 360, 600],
     maxPieces: null,
     play: "parcelas",
+    steps: ["Cada uno arma en su franja iluminada", "Conecten su parte con la de sus vecinos", "Entre todos, un lugar donde les gustaría trabajar"],
     sizes: [4, 3, 5],
   },
   {
@@ -66,6 +70,7 @@ export const TEAM_MODES: TeamMode[] = [
     times: [360, 240, 480],
     maxPieces: null,
     play: "relevo",
+    steps: ["Solo pone piezas quien tiene el turno", "Los demás miran, opinan y preparan su idea", "A mitad del tiempo llega una sorpresa"],
     sizes: [4, 3, 5],
     twist: "¡Sorpresa! Su obra ahora tiene que tener un puente. Úsenlo para unir dos partes.",
   },
@@ -78,6 +83,7 @@ export const TEAM_MODES: TeamMode[] = [
     times: [480, 360, 600],
     maxPieces: null,
     play: "telefono",
+    steps: ["Uno ve un modelo secreto y lo describe", "El otro solo escucha y arma", "A mitad del tiempo cambian de rol"],
     sizes: [2],
   },
 ];
