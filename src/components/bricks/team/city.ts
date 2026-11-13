@@ -26,6 +26,9 @@ export class CityView {
   private focused: number | null = null;
   /** Girar despacio solo cuando hay algo que mirar (en el lobby el panel tapa la escena). */
   private spin = false;
+  /** Ancho tapado por un panel a la derecha: el centro de la imagen se corre a la izquierda. */
+  private insetRight = 0;
+  private size = { width: 0, height: 0 };
 
   constructor(canvas: HTMLCanvasElement, tier: Tier, base: number) {
     this.stage = new Stage(canvas, tier);
@@ -132,6 +135,8 @@ export class CityView {
     if (!plot || plot.world.bricks.size === 0) return null;
     const cam = this.stage.camera.position.clone();
     const target = this.stage.controls.target.clone();
+    const inset = this.insetRight;
+    if (inset) this.setInset(0);
     let top = 1;
     for (const b of plot.world.bricks.values()) top = Math.max(top, b.y);
     const center = plot.origin.clone().add(new THREE.Vector3(this.base / 2, (top * PLATE_H) / 3, this.base / 2));
@@ -149,11 +154,29 @@ export class CityView {
     this.stage.controls.target.copy(target);
     this.stage.controls.update();
     this.stage.invalidateShadows();
+    if (inset) this.setInset(inset);
     return url;
   }
 
   resize(width: number, height: number) {
+    this.size = { width, height };
     this.stage.resize(width, height);
+    this.applyView();
+  }
+
+  /** Corre las obras a la izquierda para que no queden detrás del tablero; 0 = centradas. */
+  setInset(right: number) {
+    this.insetRight = right;
+    this.applyView();
+  }
+
+  private applyView() {
+    const { width, height } = this.size;
+    const cam = this.stage.camera;
+    if (this.insetRight > 0 && width > 0) cam.setViewOffset(width, height, this.insetRight / 2, 0, width, height);
+    else cam.clearViewOffset();
+    cam.updateProjectionMatrix();
+    this.stage.request();
   }
 
   dispose() {

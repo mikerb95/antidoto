@@ -223,6 +223,20 @@ export default function HostScreen({ initial, joinHost, joinUrl }: Props) {
     cityRef.current?.setSpin(session.status !== "lobby");
   }, [session.status]);
 
+  // Mientras construyen, el tablero tapa la derecha: las obras se corren para quedar a la vista.
+  // Mismo ancho que el tablero en la hoja de estilos (min(380px, 34vw) más el margen; oculto bajo 900 px).
+  useEffect(() => {
+    const city = cityRef.current;
+    if (!city) return;
+    const apply = () => {
+      const w = window.innerWidth;
+      city.setInset(session.status === "building" && w > 900 ? Math.min(380, w * 0.34) + 24 : 0);
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    return () => window.removeEventListener("resize", apply);
+  }, [session.status]);
+
   // Al terminar, el proyector toma la foto de cada obra y la sube: es el único que las tiene todas en
   // su escena. Sirven para votar en el celular, para el reporte y para el mural.
   const [photosBusy, setPhotosBusy] = useState(false);
