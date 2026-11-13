@@ -243,7 +243,7 @@ export default function AdminShell({ roleTitle, roleSubtitle, showDocs, ownCompa
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO_SRC} alt="Antídoto" className="admin-topbar-logo" />
-          <GuideAssistant role={isEmpresa ? "empresa" : "super"} companyId={ownCompanyId} />
+          {/* PRUEBA */}
           <NotificationsBell notifications={notifications} />
         </div>
         {children}
