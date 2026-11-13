@@ -9,7 +9,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { PublicBuild } from "@/lib/bricks/challenges";
 import { BRICK_COLORS, type BrickFamily } from "@/lib/bricks/palette";
-import { part, partByKey } from "@/lib/bricks/parts";
+import { part, partByKey, type PartKind } from "@/lib/bricks/parts";
+import { stockKey, type Stock } from "@/lib/bricks/kits";
 import type { Brick } from "@/lib/bricks/world";
 import type { Tier } from "../material";
 import { brickSound } from "../sound";
@@ -57,6 +58,15 @@ const CATEGORIES: { name: string; parts: string[] }[] = [
   },
 ];
 const TRAY_IDS = CATEGORIES.flatMap((c) => c.parts.map((k) => partByKey(k).id));
+/** Con kit, la bandeja agrupa las piezas de la bolsa con las mismas pestañas. */
+const KIND_TABS: { kind: PartKind; name: string }[] = [
+  { kind: "ladrillo", name: "Ladrillos" },
+  { kind: "placa", name: "Placas" },
+  { kind: "teja", name: "Tejas" },
+  { kind: "inclinada", name: "Inclinadas" },
+  { kind: "redonda", name: "Redondas" },
+  { kind: "ventana", name: "Ventanas" },
+];
 const FAMILIES: BrickFamily[] = [
   "Neutros",
   "Azules",
@@ -144,6 +154,18 @@ export default function Builder(props: BuilderProps) {
   const waiting =
     introOpen || (teamStatus !== null && teamStatus !== "building");
   const limit = team ? team.session.maxPieces : (challenge?.maxPieces ?? null);
+  const kit = team ? null : (challenge?.kit ?? null);
+  const [stock] = useState<Stock | null>(() =>
+    kit ? new Map(kit.items.map((i) => [stockKey(i.part, i.color), i.qty])) : null,
+  );
+  const kitTabs = kit
+    ? KIND_TABS.map((t) => ({
+        ...t,
+        items: kit.items
+          .filter((i) => part(i.part).kind === t.kind)
+          .sort((a, b) => a.part - b.part || a.color - b.color),
+      })).filter((t) => t.items.length > 0)
+    : [];
   const [tier] = useState<Tier>(chooseTier);
   const snap = useSyncExternalStore(
     engine.subscribe,
@@ -168,8 +190,9 @@ export default function Builder(props: BuilderProps) {
 
   useEffect(() => {
     const canvas = canvasRef.current!;
+    engine.setStock(stock);
     engine.mount(canvas, tier);
-    engine.setTrayParts(TRAY_IDS);
+    engine.setTrayParts(stock ? [] : TRAY_IDS);
     engine.setLimit(limit);
     const parent = canvas.parentElement!;
     const ro = new ResizeObserver(() =>
@@ -181,7 +204,7 @@ export default function Builder(props: BuilderProps) {
       ro.disconnect();
       engine.unmount();
     };
-  }, [engine, tier, limit]);
+  }, [engine, tier, limit, stock]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -552,92 +575,109 @@ export default function Builder(props: BuilderProps) {
         data-builder-ui
         aria-label="Piezas y colores"
       >
-        <div className={styles.tabs} role="tablist">
-          {CATEGORIES.map((c, i) => (
-            <button
-              key={c.name}
-              type="button"
-              role="tab"
-              aria-selected={category === i}
-              onClick={() => setCategory(i)}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
-        <div key={category} className={styles.parts}>
-          {CATEGORIES[category].parts.map((k) => {
-            const p = partByKey(k);
-            const thumb = snap.thumbs.get(p.id);
-            return (
+        {kit && snap.left ? (
+          <KitTray
+            name={kit.name}
+            total={kit.total}
+            tabs={kitTabs}
+            tab={Math.min(category, kitTabs.length - 1)}
+            onTab={setCategory}
+            left={snap.left}
+            thumbs={snap.kitThumbs}
+            hand={snap.hand}
+            onDrag={(p, c, e) => engine.beginTrayDrag(p, c, e)}
+            onPick={(p, c) => engine.setHand(p, c)}
+          />
+        ) : (
+          <>
+          <div className={styles.tabs} role="tablist">
+            {CATEGORIES.map((c, i) => (
               <button
-                key={k}
+                key={c.name}
                 type="button"
-                className={styles.part}
-                aria-pressed={handPart === p.id}
-                aria-label={p.name}
-                onPointerDown={(e) => {
-                  if (e.pointerType === "mouse" && e.button !== 0) return;
-                  engine.beginTrayDrag(p.id, color, e.nativeEvent);
-                }}
-                onClick={(e) => {
-                  // Teclado (Enter o Espacio): sin puntero, solo se toma la pieza.
-                  if (e.detail === 0) engine.setHand(p.id, color);
-                }}
+                role="tab"
+                aria-selected={category === i}
+                onClick={() => setCategory(i)}
               >
-                {/* Data URL dibujada en el navegador: next/image no aporta nada aquí. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {thumb ? (
-                  <img src={thumb} alt="" draggable={false} />
-                ) : (
-                  <span className={styles.partSkeleton} />
-                )}
-                <span className={styles.partName}>{shortName(p.name)}</span>
+                {c.name}
               </button>
-            );
-          })}
-        </div>
-
-        <div className={styles.colors}>
-          <div className={allColors ? styles.colorGrid : undefined}>
-            {(allColors ? FAMILIES : [null]).map((family) => (
-              <div key={family ?? "esenciales"} className={styles.colorRow}>
-                {family && <p className={styles.family}>{family}</p>}
-                <div className={styles.swatches}>
-                  {(family
-                    ? BRICK_COLORS.map((c, i) => ({ ...c, i })).filter(
-                        (c) => c.family === family,
-                      )
-                    : essentials
-                  ).map((c) => (
-                    <button
-                      key={c.i}
-                      type="button"
-                      className={`${styles.swatch} ${c.finish === "trans" ? styles.trans : ""} ${c.finish === "metal" ? styles.metal : ""}`}
-                      style={{ "--c": c.hex } as React.CSSProperties}
-                      aria-label={`${c.name}, familia ${c.family}`}
-                      aria-pressed={color === c.i}
-                      title={c.name}
-                      onClick={() => engine.setColor(c.i)}
-                    />
-                  ))}
-                </div>
-              </div>
             ))}
           </div>
-          <div className={styles.colorFoot}>
-            <span className={styles.colorName}>{BRICK_COLORS[color].name}</span>
-            <button
-              type="button"
-              className={styles.more}
-              onClick={() => setAllColors((a) => !a)}
-              aria-expanded={allColors}
-            >
-              {allColors ? "Menos colores" : "Todos los colores"}
-              <Icon name="chevron" size={16} />
-            </button>
+          <div key={category} className={styles.parts}>
+            {CATEGORIES[category].parts.map((k) => {
+              const p = partByKey(k);
+              const thumb = snap.thumbs.get(p.id);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  className={styles.part}
+                  aria-pressed={handPart === p.id}
+                  aria-label={p.name}
+                  onPointerDown={(e) => {
+                    if (e.pointerType === "mouse" && e.button !== 0) return;
+                    engine.beginTrayDrag(p.id, color, e.nativeEvent);
+                  }}
+                  onClick={(e) => {
+                    // Teclado (Enter o Espacio): sin puntero, solo se toma la pieza.
+                    if (e.detail === 0) engine.setHand(p.id, color);
+                  }}
+                >
+                  {/* Data URL dibujada en el navegador: next/image no aporta nada aquí. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {thumb ? (
+                    <img src={thumb} alt="" draggable={false} />
+                  ) : (
+                    <span className={styles.partSkeleton} />
+                  )}
+                  <span className={styles.partName}>{shortName(p.name)}</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
+
+          <div className={styles.colors}>
+            <div className={allColors ? styles.colorGrid : undefined}>
+              {(allColors ? FAMILIES : [null]).map((family) => (
+                <div key={family ?? "esenciales"} className={styles.colorRow}>
+                  {family && <p className={styles.family}>{family}</p>}
+                  <div className={styles.swatches}>
+                    {(family
+                      ? BRICK_COLORS.map((c, i) => ({ ...c, i })).filter(
+                          (c) => c.family === family,
+                        )
+                      : essentials
+                    ).map((c) => (
+                      <button
+                        key={c.i}
+                        type="button"
+                        className={`${styles.swatch} ${c.finish === "trans" ? styles.trans : ""} ${c.finish === "metal" ? styles.metal : ""}`}
+                        style={{ "--c": c.hex } as React.CSSProperties}
+                        aria-label={`${c.name}, familia ${c.family}`}
+                        aria-pressed={color === c.i}
+                        title={c.name}
+                        onClick={() => engine.setColor(c.i)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={styles.colorFoot}>
+              <span className={styles.colorName}>{BRICK_COLORS[color].name}</span>
+              <button
+                type="button"
+                className={styles.more}
+                onClick={() => setAllColors((a) => !a)}
+                aria-expanded={allColors}
+              >
+                {allColors ? "Menos colores" : "Todos los colores"}
+                <Icon name="chevron" size={16} />
+              </button>
+            </div>
+          </div>
+          </>
+        )}
       </aside>
 
       <p className={styles.srOnly} aria-live="polite">
@@ -661,6 +701,77 @@ export default function Builder(props: BuilderProps) {
         />
       )}
     </div>
+  );
+}
+
+interface KitTrayProps {
+  name: string;
+  total: number;
+  tabs: { kind: PartKind; name: string; items: { part: number; color: number; qty: number }[] }[];
+  tab: number;
+  onTab: (i: number) => void;
+  left: Stock;
+  thumbs: Map<string, string>;
+  hand: { part: number; color: number } | null;
+  onDrag: (part: number, color: number, e: PointerEvent) => void;
+  onPick: (part: number, color: number) => void;
+}
+
+/** Bandeja con kit: cada pieza viene en su color y muestra cuántas quedan en la bolsa. */
+function KitTray({ name, total, tabs, tab, onTab, left, thumbs, hand, onDrag, onPick }: KitTrayProps) {
+  let remaining = 0;
+  for (const n of left.values()) remaining += n;
+  const current = tabs[tab];
+  return (
+    <>
+      <div className={styles.tabs} role="tablist">
+        {tabs.map((t, i) => (
+          <button key={t.kind} type="button" role="tab" aria-selected={tab === i} onClick={() => onTab(i)}>
+            {t.name}
+          </button>
+        ))}
+      </div>
+      <div key={current?.kind} className={styles.parts}>
+        {current?.items.map((i) => {
+          const key = stockKey(i.part, i.color);
+          const n = left.get(key) ?? 0;
+          const p = part(i.part);
+          const c = BRICK_COLORS[i.color];
+          const thumb = thumbs.get(key);
+          return (
+            <button
+              key={key}
+              type="button"
+              className={styles.part}
+              aria-pressed={hand?.part === i.part && hand.color === i.color}
+              aria-label={`${p.name} ${c.name}, ${n === 1 ? "queda 1" : `quedan ${n}`}`}
+              title={`${p.name} · ${c.name}`}
+              disabled={n === 0}
+              onPointerDown={(e) => {
+                if (n === 0 || (e.pointerType === "mouse" && e.button !== 0)) return;
+                onDrag(i.part, i.color, e.nativeEvent);
+              }}
+              onClick={(e) => {
+                if (e.detail === 0 && n > 0) onPick(i.part, i.color);
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {thumb ? <img src={thumb} alt="" draggable={false} /> : <span className={styles.partSkeleton} />}
+              <span className={styles.partName}>{shortName(p.name)}</span>
+              <span className={styles.stockBadge} aria-hidden="true">
+                ×{n}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className={styles.colorFoot}>
+        <span className={styles.colorName}>Kit {name}</span>
+        <span className={styles.kitLeft}>
+          Quedan {remaining} de {total}
+        </span>
+      </div>
+    </>
   );
 }
 

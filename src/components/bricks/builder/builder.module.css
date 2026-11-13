@@ -1195,3 +1195,44 @@
     }
   }
 }
+
+/* Kit de piezas: cuántas quedan de cada una en la bolsa. */
+.part {
+  position: relative;
+}
+
+.stockBadge {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  min-width: 22px;
+  padding: 1px 5px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--lift);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.part:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
+.part:disabled img {
+  filter: grayscale(1);
+}
+
+.kitLeft {
+  flex: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-ink);
+}
