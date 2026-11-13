@@ -46,7 +46,7 @@ test("la guía empieza en la pantalla donde está el admin", () => {
   assert.equal(startStep(asignar, "/admin/asignar"), 2);
 });
 
-test("avanza sola al llegar a la pantalla del paso siguiente, de a uno", () => {
+test("avanza sola al llegar a la pantalla de un paso siguiente, sin saltarse otra pantalla", () => {
   const asignar = guidesFor("super").find((g) => g.id === "asignar-actividad")!;
   assert.equal(resolveStep(asignar, 1, "/admin/asignar"), 2);
   assert.equal(resolveStep(asignar, 1, "/admin/empresas/7"), 1);
