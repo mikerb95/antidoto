@@ -4,12 +4,22 @@ import type { AdminUser } from "./auth";
 import { companyFilter, LIVE_CODE } from "./scope";
 import { BUILDS, buildMissionId, getBuild, type BuildDef, type BuildTextOverride, type BuildTexts } from "./bricks/challenges";
 import { decodeBuild } from "./bricks/codec";
+import { getKit, type KitDef } from "./bricks/kits";
 import type { Brick } from "./bricks/world";
 
 /** Qué reto de construcción usa una misión; null si es otra clase de actividad. */
 export async function missionBuild(missionId: string): Promise<BuildDef | null> {
   const row = await one<{ build_key: string }>("SELECT build_key FROM mission_builds WHERE mission_id = ?", [missionId]);
   return row ? getBuild(row.build_key) : null;
+}
+
+/** El kit de piezas asignado con el código de esta participación; null = todas las piezas. */
+export async function participationKit(participationId: string): Promise<KitDef | null> {
+  const row = await one<{ kit_key: string }>(
+    `SELECT k.kit_key FROM participations p JOIN activity_code_kit k ON k.activity_code_id = p.activity_code_id WHERE p.id = ?`,
+    [participationId],
+  );
+  return row ? getKit(row.kit_key) : null;
 }
 
 export async function loadBuildOverride(key: string): Promise<BuildTextOverride> {

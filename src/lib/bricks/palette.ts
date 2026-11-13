@@ -41,6 +41,14 @@ export const BRICK_COLORS: readonly BrickColor[] = [
   { name: "Oro perlado", hex: "#AA7F2E", family: "Especiales", finish: "metal", essential: false },
   { name: "Transparente", hex: "#FCFCFC", family: "Especiales", finish: "trans", essential: false },
   { name: "Azul claro transparente", hex: "#AEEFEC", family: "Especiales", finish: "trans", essential: false },
+  // Agregados el 2026-11-12 para los kits de LEGO Serious Play (src/lib/bricks/kits.ts).
+  { name: "Verde oscuro", hex: "#184632", family: "Verdes", finish: "abs", essential: false },
+  { name: "Rosa oscuro", hex: "#C870A0", family: "Rosas", finish: "abs", essential: false },
+  { name: "Azul medio", hex: "#5A93DB", family: "Azules", finish: "abs", essential: false },
+  { name: "Plata metalizado", hex: "#898788", family: "Especiales", finish: "metal", essential: false },
+  { name: "Rojo transparente", hex: "#C91A09", family: "Especiales", finish: "trans", essential: false },
+  { name: "Amarillo transparente", hex: "#F5CD2F", family: "Especiales", finish: "trans", essential: false },
+  { name: "Verde transparente", hex: "#84B68D", family: "Especiales", finish: "trans", essential: false },
 ];
 
 /** Índice de un color por nombre; falla en desarrollo si el nombre no existe. */

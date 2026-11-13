@@ -3,6 +3,7 @@
 // pura, sin base de datos, para probarla con node --test y validar en el servidor.
 
 import { decodeBuild } from "./codec.ts";
+import { kitStock, overStock, publicKit, type KitDef, type PublicKit } from "./kits.ts";
 import { colorIndex } from "./palette.ts";
 import { PARTS, part, partByKey } from "./parts.ts";
 import { footprint, type Brick, type Rot } from "./world.ts";
@@ -217,19 +218,29 @@ export interface PublicBuild {
   story: boolean;
   model: { base: number; bricks: Brick[] } | null;
   texts: BuildTexts;
+  /** Kit de piezas asignado con el código; null = todas las piezas en todos los colores. */
+  kit: PublicKit | null;
 }
 
-export function publicBuild(def: BuildDef, texts: BuildTexts): PublicBuild {
+/** Replicar pide piezas exactas: con un kit el modelo podría quedar imposible. */
+export function acceptsKit(def: BuildDef): boolean {
+  return def.model === null;
+}
+
+export function publicBuild(def: BuildDef, texts: BuildTexts, kit: KitDef | null = null): PublicBuild {
+  const k = kit && acceptsKit(def) ? kit : null;
   return {
     key: def.key,
     kind: def.kind,
     base: def.base,
     timeLimit: def.timeLimit,
     maxPieces: def.maxPieces,
-    starter: def.starter,
+    // La pieza de arranque no viene en la bolsa: con kit la base empieza vacía.
+    starter: def.starter && !k,
     story: def.story,
     model: def.model ? { base: def.model.base, bricks: modelBricks(def) } : null,
     texts,
+    kit: k ? publicKit(k) : null,
   };
 }
 
@@ -265,7 +276,7 @@ const KNOWN_PARTS = new Set(PARTS.map((p) => p.id));
  * Una obra que llega del navegador: se decodifica y se revisa contra el reto. No se revisa que
  * cada pieza encaje: eso lo cuida el constructor y una obra rara no le hace daño a nadie.
  */
-export function validateWork(def: BuildDef, data: Uint8Array): { ok: true; bricks: Brick[] } | { ok: false; error: string } {
+export function validateWork(def: BuildDef, data: Uint8Array, kit: KitDef | null = null): { ok: true; bricks: Brick[] } | { ok: false; error: string } {
   if (data.byteLength > MAX_WORK_BYTES) return { ok: false, error: "La obra es demasiado grande." };
   let decoded;
   try {
@@ -276,7 +287,15 @@ export function validateWork(def: BuildDef, data: Uint8Array): { ok: true; brick
   if (decoded.base !== def.base) return { ok: false, error: "La obra no corresponde a este reto." };
   if (decoded.bricks.some((b) => !KNOWN_PARTS.has(b.part))) return { ok: false, error: "La obra tiene piezas desconocidas." };
   if (def.maxPieces !== null && decoded.bricks.length > def.maxPieces) return { ok: false, error: `Este reto admite máximo ${def.maxPieces} piezas.` };
+  if (kit && acceptsKit(def) && overStock(kitStockCached(kit), decoded.bricks)) return { ok: false, error: `La obra usa piezas que no vienen en el kit ${kit.name}.` };
   return { ok: true, bricks: decoded.bricks };
+}
+
+const stockCache = new Map<string, ReturnType<typeof kitStock>>();
+function kitStockCached(kit: KitDef) {
+  let s = stockCache.get(kit.key);
+  if (!s) stockCache.set(kit.key, (s = kitStock(kit)));
+  return s;
 }
 
 /** Celdas ocupadas con su color, llevadas a la esquina mínima. */

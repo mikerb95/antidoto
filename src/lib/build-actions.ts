@@ -7,7 +7,8 @@ import { PARTICIPATION_COOKIE } from "./participation";
 import { isExpired } from "./expiry";
 import { audit, requireSuper } from "./admin-guard";
 import { getBuild, imageMime, matchScore, MAX_IMAGE_BYTES, modelBricks, validateBuildTexts, validateStory, validateWork, type BuildDef } from "./bricks/challenges";
-import { missionBuild } from "./build-data";
+import { missionBuild, participationKit } from "./build-data";
+import type { KitDef } from "./bricks/kits";
 import type { Blocked, BlockReason } from "./experience-actions";
 
 // --- Participante --------------------------------------------------------------
@@ -15,6 +16,7 @@ import type { Blocked, BlockReason } from "./experience-actions";
 interface BuildContext {
   participationId: string;
   def: BuildDef;
+  kit: KitDef | null;
 }
 
 /** La participación de la cookie, si es de un reto de construcción abierto y sin entregar. */
@@ -36,7 +38,7 @@ async function buildContext(): Promise<BuildContext | { error: string; reason: B
 
   const def = await missionBuild(row.mission_id);
   if (!def) return { error: "Esta actividad no es un reto de construcción.", reason: "other" };
-  return { participationId: id, def };
+  return { participationId: id, def, kit: await participationKit(id) };
 }
 
 /**
@@ -61,7 +63,7 @@ export async function saveDraft(formData: FormData): Promise<{ ok: true } | Bloc
   const ctx = await buildContext();
   if ("error" in ctx) return { ok: false, error: ctx.error, reason: ctx.reason };
   const data = await readData(formData);
-  const work = data ? validateWork(ctx.def, data) : ({ ok: false, error: "No llegó la obra." } as const);
+  const work = data ? validateWork(ctx.def, data, ctx.kit) : ({ ok: false, error: "No llegó la obra." } as const);
   if (!work.ok) return { ok: false, error: work.error, reason: "other" };
 
   await run(
@@ -82,7 +84,7 @@ export async function submitWork(formData: FormData): Promise<{ ok: true } | Blo
   const ctx = await buildContext();
   if ("error" in ctx) return { ok: false, error: ctx.error, reason: ctx.reason };
   const data = await readData(formData);
-  const work = data ? validateWork(ctx.def, data) : ({ ok: false, error: "No llegó la obra." } as const);
+  const work = data ? validateWork(ctx.def, data, ctx.kit) : ({ ok: false, error: "No llegó la obra." } as const);
   if (!work.ok) return { ok: false, error: work.error, reason: "other" };
   if (work.bricks.length === 0) return { ok: false, error: "Pon al menos una pieza antes de entregar.", reason: "other" };
   const story = validateStory(ctx.def, { title: formData.get("title"), phrase: formData.get("phrase") });

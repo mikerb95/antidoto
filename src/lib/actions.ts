@@ -10,7 +10,8 @@ import { audit, requireSuper, requireUser } from "./admin-guard";
 import { findByCode } from "./queries";
 import { ensureExperienceMission } from "./experience-data";
 import { getExperience, seriesEntry } from "./experiences/catalog";
-import { buildTexts, getBuild } from "./bricks/challenges";
+import { acceptsKit, buildTexts, getBuild } from "./bricks/challenges";
+import { getKit } from "./bricks/kits";
 import { ensureBuildMission, loadBuildOverride, missionBuild } from "./build-data";
 import { BRICKS_VISIBLE } from "./bricks/visible";
 import { PARTICIPATION_COOKIE } from "./participation";
@@ -194,6 +195,9 @@ export async function assignActivity(_prev: AssignState, formData: FormData): Pr
     cargos = parsed.value;
   }
   const askPlace = formData.get("askPlace") === "on";
+  const kitKey = String(formData.get("kit") ?? "");
+  const kit = build && acceptsKit(build) && kitKey ? getKit(kitKey) : null;
+  if (build && acceptsKit(build) && kitKey && !kit) return { error: "Ese kit no existe." };
 
   const company = await one<{ name: string; archived: number }>(
     `SELECT name, EXISTS (SELECT 1 FROM company_archive WHERE company_id = companies.id) AS archived
@@ -225,7 +229,10 @@ export async function assignActivity(_prev: AssignState, formData: FormData): Pr
       [cargos ? JSON.stringify(cargos) : null, askPlace ? 1 : 0, code]
     );
   }
-  await audit(`Actividad "${missionTitle}" asignada a ${company.name} con el código ${code}.`, user, companyId);
+  if (kit) {
+    await run("INSERT INTO activity_code_kit (activity_code_id, kit_key) SELECT id, ? FROM activity_codes WHERE code = ?", [kit.key, code]);
+  }
+  await audit(`Actividad "${missionTitle}"${kit ? ` con el kit ${kit.name}` : ""} asignada a ${company.name} con el código ${code}.`, user, companyId);
 
   revalidateCompany(companyId);
   redirect(`/admin/empresas/${companyId}?asignada=${encodeURIComponent(code)}`);

@@ -351,6 +351,12 @@ CREATE TABLE IF NOT EXISTS activity_code_profile (
   ask_place        INTEGER NOT NULL DEFAULT 0 CHECK (ask_place IN (0, 1))
 );
 
+-- Kit de piezas de un reto de construcción (src/lib/bricks/kits.ts). Sin fila = todas las piezas.
+CREATE TABLE IF NOT EXISTS activity_code_kit (
+  activity_code_id INTEGER PRIMARY KEY REFERENCES activity_codes(id) ON DELETE CASCADE,
+  kit_key          TEXT NOT NULL
+);
+
 -- La fila se crea al terminar la bienvenida: sin fila, el participante todavía no la ha visto.
 CREATE TABLE IF NOT EXISTS participant_profiles (
   participation_id TEXT PRIMARY KEY REFERENCES participations(id) ON DELETE CASCADE,
