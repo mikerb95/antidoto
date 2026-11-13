@@ -52,8 +52,11 @@ test("avanza sola al llegar a la pantalla del paso siguiente, de a uno", () => {
   assert.equal(resolveStep(asignar, 1, "/admin/empresas/7"), 1);
   const last = asignar.steps.length - 1;
   assert.equal(resolveStep(asignar, last - 1, "/admin/empresas/7"), last);
-  // En la pantalla de dos pasos más adelante no salta.
+  // Desde la lista de empresas no salta hasta el formulario: hay un paso en otra pantalla entre medio.
   assert.equal(resolveStep(asignar, 0, "/admin/asignar"), 0);
+  // Sí se salta lo que quedaba en la misma pantalla: tocó «Ver resultados» sin ver «Certificados».
+  const resultados = guidesFor("super").find((g) => g.id === "ver-resultados")!;
+  assert.equal(resolveStep(resultados, 1, "/admin/empresas/7/actividades/m1"), resultados.steps.length - 1);
 });
 
 test("las rutas distinguen la edición de riesgos de las otras páginas de la biblioteca", () => {

@@ -381,13 +381,18 @@ export function startStep(guide: Guide, pathname: string): number {
 }
 
 /**
- * El paso que corresponde mostrar. Si el admin ya llegó a la pantalla del paso siguiente (tocó el
- * botón que se le pidió), la guía avanza sola; nunca salta más de uno.
+ * El paso que corresponde mostrar. Si el admin ya llegó a la pantalla de un paso siguiente (tocó
+ * el botón que se le pidió), la guía avanza sola. Puede saltarse los pasos que quedaban en la
+ * misma pantalla de antes (tocó «Ver resultados» sin pasar por «Certificados»), pero nunca los de
+ * otra pantalla.
  */
 export function resolveStep(guide: Guide, step: number, pathname: string): number {
   const current = guide.steps[step];
-  const next = guide.steps[step + 1];
-  if (current && !stepMatches(current, pathname) && next && stepMatches(next, pathname)) return step + 1;
+  if (!current || stepMatches(current, pathname)) return step;
+  for (let k = step + 1; k < guide.steps.length; k++) {
+    if (stepMatches(guide.steps[k], pathname)) return k;
+    if (guide.steps[k].path !== current.path) break;
+  }
   return step;
 }
 

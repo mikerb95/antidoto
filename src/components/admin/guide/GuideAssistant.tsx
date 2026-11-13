@@ -246,6 +246,16 @@ function Coach({ guide, index, dir, pathname, companyId, onGo }: CoachProps) {
 
   // Un paso que no aplica aquí (sin kit, sin certificados todavía) se salta en la dirección en que iba.
   const missing = onPage && !!step.target && box === null;
+  // La pantalla puede tardar en cargar: el aviso de "no lo vemos" espera un momento.
+  const [waited, setWaited] = useState(false);
+  useEffect(() => {
+    if (!missing) return;
+    const id = setTimeout(() => setWaited(true), 1500);
+    return () => {
+      clearTimeout(id);
+      setWaited(false);
+    };
+  }, [missing]);
   useEffect(() => {
     if (!missing || !step.optional) return;
     const id = setTimeout(() => {
@@ -329,8 +339,8 @@ function Coach({ guide, index, dir, pathname, companyId, onGo }: CoachProps) {
             )}
           </div>
         )}
-        {missing && !step.optional && <p className={styles.hint}>No lo vemos en esta pantalla todavía. Si la página sigue cargando, espera un momento.</p>}
-        {missing && step.optional && <p className={styles.hint}>Esto no aplica aquí: pasamos al siguiente.</p>}
+        {missing && waited && !step.optional && <p className={styles.hint}>No lo vemos en esta pantalla todavía. Si la página sigue cargando, espera un momento.</p>}
+        {missing && waited && step.optional && <p className={styles.hint}>Esto no aplica aquí: pasamos al siguiente.</p>}
 
         <div className={styles.coachFoot}>
           <button type="button" className={styles.backBtn} onClick={back} disabled={index === 0}>
