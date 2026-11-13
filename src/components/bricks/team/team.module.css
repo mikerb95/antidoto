@@ -295,7 +295,8 @@
   cursor: default;
 }
 
-.voteCard:disabled img {
+/* Solo se apaga la obra propia; mientras se guarda un voto las demás se bloquean sin cambiar. */
+.voteCard[data-mine] img {
   opacity: 0.4;
 }
 

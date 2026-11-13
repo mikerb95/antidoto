@@ -137,6 +137,7 @@ export default function TeamClosing({ engine, teamName, signal, summary, title }
                         type="button"
                         className={own.voteCard}
                         aria-pressed={chosen}
+                        data-mine={e.mine || undefined}
                         disabled={e.mine || busy === "vote"}
                         onClick={() => choose(e.teamId)}
                       >
