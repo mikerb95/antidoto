@@ -69,6 +69,8 @@ export const PARTS: readonly PartDef[] = [
   box(28, "placa", "Placa 4x4", 4, 4, 1),
   box(29, "placa", "Placa 6x6", 6, 6, 1),
   box(30, "placa", "Placa 8x8", 8, 8, 1),
+  // Agregada el 2026-11-12 para los kits de LEGO Serious Play (el pato lleva dos).
+  box(31, "placa", "Placa 2x3", 3, 2, 1),
   box(40, "teja", "Teja 1x1", 1, 1, 1, false),
   box(41, "teja", "Teja 1x2", 2, 1, 1, false),
   box(42, "teja", "Teja 2x2", 2, 2, 1, false),

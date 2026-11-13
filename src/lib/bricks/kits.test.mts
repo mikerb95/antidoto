@@ -35,10 +35,10 @@ test("el kit público junta la misma pieza y color en una sola fila", () => {
 
 test("el inventario descuenta lo puesto y detecta lo que se pasa", () => {
   const stock = kitStock(getKit("pato")!);
-  const reds = [brick(1, "placa-2x4", "Rojo brillante"), brick(2, "placa-2x4", "Rojo brillante", 4)];
-  assert.equal(stockLeft(stock, reds).get(stockKey(partByKey("placa-2x4").id, colorIndex("Rojo brillante"))), 0);
+  const reds = [brick(1, "placa-2x3", "Rojo brillante"), brick(2, "placa-2x3", "Rojo brillante", 4)];
+  assert.equal(stockLeft(stock, reds).get(stockKey(partByKey("placa-2x3").id, colorIndex("Rojo brillante"))), 0);
   assert.equal(overStock(stock, reds), false);
-  assert.equal(overStock(stock, [...reds, brick(3, "placa-2x4", "Rojo brillante", 8)]), true);
+  assert.equal(overStock(stock, [...reds, brick(3, "placa-2x3", "Rojo brillante", 8)]), true);
   // Una pieza que el kit no trae, o un color que no trae, ya se pasa.
   assert.equal(overStock(stock, [brick(4, "ladrillo-1x1", "Amarillo brillante")]), true);
   assert.equal(overStock(stock, [brick(5, "ladrillo-2x4", "Azul brillante")]), true);

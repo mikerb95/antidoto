@@ -40,7 +40,7 @@ const DUCK: KitItem[] = [
   { part: "ladrillo-2x4", color: "Amarillo brillante", qty: 1 },
   { part: "ladrillo-2x2", color: "Amarillo brillante", qty: 2, from: "Uno es el ladrillo 2x2 con ojos" },
   { part: "ladrillo-1x2", color: "Amarillo brillante", qty: 1 },
-  { part: "placa-2x4", color: "Rojo brillante", qty: 2, from: "Placa 2x3" },
+  { part: "placa-2x3", color: "Rojo brillante", qty: 2 },
 ];
 
 const WINDOW: KitItem[] = [
@@ -51,7 +51,8 @@ const WINDOW: KitItem[] = [
   { part: "ladrillo-1x2", color: "Azul brillante", qty: 1, from: "Torso de minifigura" },
   { part: "placa-redonda-1x1", color: "Verde", qty: 1, from: "Flor con tallo" },
   { part: "inclinada-1x2", color: "Naranja brillante", qty: 2 },
-  { part: "placa-2x4", color: "Naranja brillante", qty: 2, from: "Una es placa 2x3" },
+  { part: "placa-2x3", color: "Naranja brillante", qty: 1 },
+  { part: "placa-2x4", color: "Naranja brillante", qty: 1 },
   { part: "ladrillo-1x4", color: "Rojo brillante", qty: 2 },
   { part: "ladrillo-redondo-2x2", color: "Rojo brillante", qty: 1, from: "Rin de rueda" },
   { part: "ladrillo-1x4", color: "Magenta", qty: 2 },
@@ -115,14 +116,15 @@ const STARTER: KitItem[] = [
   // Naranja
   { part: "inclinada-2x3", color: "Naranja brillante", qty: 2, from: "Tejas 2x3 de 25°, una invertida" },
   { part: "inclinada-1x2", color: "Naranja brillante", qty: 2 },
-  { part: "placa-2x4", color: "Naranja brillante", qty: 2, from: "Una es placa 2x3" },
+  { part: "placa-2x3", color: "Naranja brillante", qty: 1 },
+  { part: "placa-2x4", color: "Naranja brillante", qty: 1 },
   { part: "ladrillo-2x4", color: "Naranja brillante", qty: 5 },
   // Rosas
   { part: "ladrillo-2x2", color: "Rosa oscuro", qty: 4 },
   { part: "placa-redonda-1x1", color: "Rosa oscuro", qty: 2, from: "Flor" },
   // Rojo
   { part: "ladrillo-2x2", color: "Rojo brillante", qty: 2 },
-  { part: "placa-2x4", color: "Rojo brillante", qty: 2, from: "Placa 2x3" },
+  { part: "placa-2x3", color: "Rojo brillante", qty: 2 },
   { part: "ladrillo-1x4", color: "Rojo brillante", qty: 2, from: "Ladrillo 1x4 con arco" },
   { part: "placa-1x2", color: "Rojo brillante", qty: 2, from: "Bisagra 1x2" },
   { part: "placa-2x2", color: "Rojo brillante", qty: 2, from: "Bisagra 2x2" },
