@@ -154,7 +154,7 @@ export default function Builder(props: BuilderProps) {
   const waiting =
     introOpen || (teamStatus !== null && teamStatus !== "building");
   const limit = team ? team.session.maxPieces : (challenge?.maxPieces ?? null);
-  const kit = team ? null : (challenge?.kit ?? null);
+  const kit = team ? team.session.kit : (challenge?.kit ?? null);
   const [stock] = useState<Stock | null>(() =>
     kit ? new Map(kit.items.map((i) => [stockKey(i.part, i.color), i.qty])) : null,
   );

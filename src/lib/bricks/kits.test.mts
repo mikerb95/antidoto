@@ -61,3 +61,25 @@ test("replicar no acepta kit: el modelo pide piezas exactas", () => {
   const def = getBuild("replica-casa")!;
   assert.equal(publicBuild(def, def.defaults, getKit("pato")).kit, null);
 });
+
+test("en equipo la bolsa es compartida: el servidor rechaza la pieza que ya no queda", async () => {
+  const { applyTeamOp, getTeamMode, modeAcceptsKit } = await import("./team.ts");
+  const { BrickWorld } = await import("./world.ts");
+  const world = new BrickWorld(16);
+  const rules = { base: 16, maxPieces: null, parcel: null, stock: kitStock(getKit("pato")!) };
+  const add = (b: Brick) => applyTeamOp(world, { t: "add", brick: b }, rules);
+  assert.equal(add(brick(1, "placa-2x3", "Rojo brillante", 0)), null);
+  assert.equal(add(brick(2, "placa-2x3", "Rojo brillante", 5)), null);
+  assert.equal(add(brick(3, "placa-2x3", "Rojo brillante", 10)), "kit");
+  assert.equal(world.bricks.size, 2);
+  // Pintar una pieza de un color que el kit no trae tampoco pasa.
+  assert.equal(applyTeamOp(world, { t: "paint", id: "k1", from: colorIndex("Rojo brillante"), to: colorIndex("Azul brillante") }, rules), "kit");
+  assert.equal(modeAcceptsKit(getTeamMode("telefono-roto")!), false);
+  assert.equal(modeAcceptsKit(getTeamMode("obra-equipo")!), true);
+});
+
+test("solo el Starter alcanza para equipos, y hasta 4 personas", async () => {
+  const { teamKits } = await import("./kits.ts");
+  assert.deepEqual(teamKits(4).map((k) => k.key), ["starter"]);
+  assert.deepEqual(teamKits(5), []);
+});

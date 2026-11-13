@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { currentUser } from "@/lib/auth";
-import { getTeamMode, TEAM_THUMB } from "@/lib/bricks/team";
+import { getTeamMode, modeAcceptsKit, TEAM_THUMB } from "@/lib/bricks/team";
+import { KITS, kitTotal } from "@/lib/bricks/kits";
 import { recentSessions } from "@/lib/brick-session";
 import { colors, calSans } from "@/lib/theme";
 import { card } from "@/lib/styles";
@@ -55,7 +56,17 @@ export default async function ModoEquipoPage({ params }: { params: Promise<{ mod
           <h2 id="abrir-sala" style={{ ...calSans, fontSize: 19, margin: "0 0 16px", color: colors.ink }}>
             Abrir una sala
           </h2>
-          <TeamLaunchForm mode={mode.key} times={mode.times} sizes={mode.sizes} />
+          <TeamLaunchForm
+            mode={mode.key}
+            times={mode.times}
+            sizes={mode.sizes}
+            // Solo los kits pensados para compartir (el Starter, hasta 4 personas).
+            kits={
+              modeAcceptsKit(mode)
+                ? KITS.filter((k) => k.maxPeople > 1).map((k) => ({ key: k.key, name: k.name, total: kitTotal(k), maxPeople: k.maxPeople }))
+                : []
+            }
+          />
         </section>
       </div>
 

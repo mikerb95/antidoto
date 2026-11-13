@@ -5,6 +5,7 @@
 import { matchScore, type BuildKind } from "./challenges.ts";
 import { apply, invert, type Op } from "./ops.ts";
 import { BRICK_COLORS, colorIndex } from "./palette.ts";
+import { overStock, type Stock } from "./kits.ts";
 import { PARTS, part, partByKey } from "./parts.ts";
 import { BrickWorld, footprint, inGrid, type Brick, type Placement, type Rot } from "./world.ts";
 
@@ -90,6 +91,11 @@ export const TEAM_MODES: TeamMode[] = [
 
 /** Qué portada isométrica usa cada modo en la biblioteca (las mismas composiciones de los retos). */
 export const TEAM_THUMB = { juntos: "presupuesto", parcelas: "tema", relevo: "libre", telefono: "replicar" } as const satisfies Record<TeamPlay, BuildKind>;
+
+/** Teléfono Roto copia modelos fijos: con un kit podrían quedar imposibles. */
+export function modeAcceptsKit(mode: TeamMode): boolean {
+  return mode.play !== "telefono";
+}
 
 export function getTeamMode(key: string): TeamMode | null {
   return TEAM_MODES.find((m) => m.key === key) ?? null;
@@ -359,12 +365,14 @@ export function parseOp(v: unknown, depth = 0): Op | null {
 export interface TeamRules {
   base: number;
   maxPieces: number | null;
+  /** Bolsa del kit de la sala, compartida por el equipo; null = todas las piezas. */
+  stock?: Stock | null;
   /** Parcela de quien manda la operación; null = puede construir en toda la base. */
   parcel: Parcel | null;
 }
 
 /** Por qué no se acepta una operación; null = se aceptó y ya quedó aplicada al mundo. */
-export type OpRejection = "choque" | "parcela" | "presupuesto" | "fuera" | "turno" | "rol";
+export type OpRejection = "choque" | "parcela" | "presupuesto" | "kit" | "fuera" | "turno" | "rol";
 
 function opsTouch(world: BrickWorld, op: Op, parcel: Parcel): boolean {
   switch (op.t) {
@@ -397,6 +405,10 @@ export function applyTeamOp(world: BrickWorld, op: Op, rules: TeamRules): OpReje
   if (rules.maxPieces !== null && world.bricks.size > Math.max(before, rules.maxPieces)) {
     apply(world, invert(op));
     return "presupuesto";
+  }
+  if (rules.stock && overStock(rules.stock, world.bricks.values())) {
+    apply(world, invert(op));
+    return "kit";
   }
   return null;
 }

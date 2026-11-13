@@ -11,6 +11,7 @@ import {
   canBuildPhone,
   freeSlot,
   getTeamMode,
+  modeAcceptsKit,
   parcelFor,
   parseOp,
   phoneArea,
@@ -25,6 +26,7 @@ import {
   type TeamPlay,
 } from "./bricks/team";
 import type { Op } from "./bricks/ops";
+import { getKit, kitStock, publicKit, type KitDef, type PublicKit } from "./bricks/kits";
 import { BrickWorld, type Brick } from "./bricks/world";
 import { hostChannel, hostChannels, sessionChannel, teamChannel } from "./bricks/channels";
 
@@ -63,9 +65,11 @@ export interface SessionRow {
   started_ms: number | null;
   ends_ms: number | null;
   ably_messages: number;
+  kit_key: string | null;
 }
 
-const SESSION_COLUMNS = "id, mode, host_user_id, company_id, pin, status, team_size, time_limit, started_ms, ends_ms, ably_messages";
+const SESSION_COLUMNS =
+  "id, mode, host_user_id, company_id, pin, status, team_size, time_limit, started_ms, ends_ms, ably_messages, (SELECT kit_key FROM brick_session_kit k WHERE k.session_id = brick_sessions.id) AS kit_key";
 
 function normalize(row: SessionRow): SessionRow {
   return {
@@ -93,17 +97,29 @@ export async function getSessionForHost(id: number, user: AdminUser): Promise<Se
   return null;
 }
 
+/** El kit de la sala, si el modo lo admite. */
+function sessionKit(s: SessionRow): KitDef | null {
+  const kit = getKit(s.kit_key);
+  return kit && modeAcceptsKit(modeOf(s)) ? kit : null;
+}
+
 function modeOf(s: SessionRow): TeamMode {
   return getTeamMode(s.mode) ?? getTeamMode("obra-equipo")!;
 }
 
 // --- Lanzar ----------------------------------------------------------------------
 
-export async function launchSession(user: AdminUser, input: { mode: string; teamSize: number; timeLimit: number }): Promise<Result<{ id: number }>> {
+export async function launchSession(
+  user: AdminUser,
+  input: { mode: string; teamSize: number; timeLimit: number; kit?: string },
+): Promise<Result<{ id: number }>> {
   const mode = getTeamMode(input.mode);
   if (!mode) return err("Ese modo no existe.");
   if (!mode.sizes.includes(input.teamSize)) return err("Elige uno de los tamaños de equipo propuestos.");
   if (!mode.times.includes(input.timeLimit)) return err("Elige una de las duraciones propuestas.");
+  const kit = input.kit ? getKit(input.kit) : null;
+  if (input.kit && (!kit || !modeAcceptsKit(mode))) return err("Ese kit no se puede usar en este modo.");
+  if (kit && kit.maxPeople < input.teamSize) return err(`El kit ${kit.name} alcanza para equipos de máximo ${kit.maxPeople} personas.`);
   const companyId = user.role === "empresa" ? user.company_id : null;
   for (let attempt = 0; attempt < 8; attempt++) {
     const pin = generatePin();
@@ -113,7 +129,8 @@ export async function launchSession(user: AdminUser, input: { mode: string; team
         [mode.key, user.id, companyId, pin, input.teamSize, input.timeLimit],
       );
       const id = Number(res.lastInsertRowid);
-      await audit(`Sesión en equipo "${mode.title}" lanzada (PIN ${pin}).`, user, companyId);
+      if (kit) await run("INSERT INTO brick_session_kit (session_id, kit_key) VALUES (?, ?)", [id, kit.key]);
+      await audit(`Sesión en equipo "${mode.title}"${kit ? ` con el kit ${kit.name}` : ""} lanzada (PIN ${pin}).`, user, companyId);
       return { ok: true, id };
     } catch (e) {
       // El PIN chocó con otra sesión abierta: se prueba otro.
@@ -158,6 +175,8 @@ export interface SessionView {
   timeLimit: number;
   base: number;
   maxPieces: number | null;
+  /** Bolsa de piezas de cada equipo; null = todas las piezas. */
+  kit: PublicKit | null;
   play: TeamPlay;
   /** Consigna sorpresa de mitad de tiempo (Relevo). */
   twist: string | null;
@@ -177,6 +196,7 @@ function sessionView(s: SessionRow): SessionView {
     timeLimit: s.time_limit,
     base: teamBase(mode, s.team_size),
     maxPieces: mode.maxPieces,
+    kit: sessionKit(s) ? publicKit(sessionKit(s)!) : null,
     play: mode.play,
     twist: mode.twist ?? null,
     startedMs: s.started_ms,
@@ -399,7 +419,13 @@ export async function applyOps(playerId: string, raw: unknown): Promise<Result<O
   if (s.status === "finished" || (s.ends_ms !== null && Date.now() > s.ends_ms + GRACE_MS)) return err("Se acabó el tiempo.", 409);
 
   const mode = modeOf(s);
-  const rules = { base: teamBase(mode, s.team_size), maxPieces: mode.maxPieces, parcel: mode.play === "parcelas" ? parcelFor(p.slot) : null };
+  const kit = sessionKit(s);
+  const rules = {
+    base: teamBase(mode, s.team_size),
+    maxPieces: mode.maxPieces,
+    stock: kit ? kitStock(kit) : null,
+    parcel: mode.play === "parcelas" ? parcelFor(p.slot) : null,
+  };
   const ops = raw.map((o) => parseOp(o));
 
   // Relevo y Teléfono Roto: no todos pueden construir todo el tiempo.

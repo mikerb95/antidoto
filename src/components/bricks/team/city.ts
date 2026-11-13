@@ -158,6 +158,16 @@ export class CityView {
     return url;
   }
 
+  /** Dónde queda en pantalla el borde de adelante de una base (para poner su nombre); null si está detrás de la cámara. */
+  screenPoint(teamId: number): { x: number; y: number } | null {
+    const plot = this.plots.get(teamId);
+    const { width, height } = this.size;
+    if (!plot || !width) return null;
+    const p = plot.origin.clone().add(new THREE.Vector3(this.base / 2, -0.6, this.base + 0.6)).project(this.stage.camera);
+    if (p.z > 1) return null;
+    return { x: ((p.x + 1) / 2) * width, y: ((1 - p.y) / 2) * height };
+  }
+
   resize(width: number, height: number) {
     this.size = { width, height };
     this.stage.resize(width, height);

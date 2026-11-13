@@ -33,6 +33,8 @@ export interface KitDef {
   ref: string;
   /** Para qué sirve, tal como lo recomienda la presentación de Antídoto. */
   use: string;
+  /** Cuántas personas comparten una bolsa como máximo: decide en qué salas de equipo se ofrece. */
+  maxPeople: number;
   items: KitItem[];
 }
 
@@ -183,6 +185,7 @@ export const KITS: readonly KitDef[] = [
     name: "Duck polybag",
     ref: "2000416",
     use: "Pequeñas actividades iniciales. Uso individual.",
+    maxPeople: 1,
     items: DUCK,
   },
   {
@@ -190,6 +193,7 @@ export const KITS: readonly KitDef[] = [
     name: "Window Exploration Bag",
     ref: "2000409",
     use: "Fases iniciales de talleres, talleres sencillos o demos. Uso individual.",
+    maxPeople: 1,
     items: WINDOW,
   },
   {
@@ -197,12 +201,18 @@ export const KITS: readonly KitDef[] = [
     name: "Starter kit",
     ref: "2000414",
     use: "Talleres completos de unas 6 horas. Uso individual o grupal (máximo 4 personas).",
+    maxPeople: 4,
     items: STARTER,
   },
 ];
 
 export function getKit(key: string | null | undefined): KitDef | null {
   return KITS.find((k) => k.key === key) ?? null;
+}
+
+/** Kits que alcanzan para un equipo de ese tamaño (una bolsa por equipo). */
+export function teamKits(teamSize: number): KitDef[] {
+  return KITS.filter((k) => k.maxPeople >= teamSize);
 }
 
 export function kitTotal(kit: KitDef): number {

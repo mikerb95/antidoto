@@ -205,3 +205,68 @@ export async function workImage(participationId: string, viewer: { participation
   if (!own && !admin) return null;
   return { body: new Uint8Array(row.image), mime: row.image_mime };
 }
+
+// --- Visor en tiempo real ---------------------------------------------------------------------
+
+export interface WatchedWork {
+  id: string;
+  name: string;
+  started: boolean;
+  submitted: boolean;
+  count: number;
+  /** Epoch en ms del último guardado; null si no ha empezado. */
+  updatedMs: number | null;
+  /** La obra codificada en base64, solo si cambió desde `since`. */
+  data?: string;
+}
+
+/**
+ * Las obras de un reto en una empresa, para el visor del admin. El constructor de cada persona
+ * guarda solo unos segundos después de cada cambio; el visor pregunta seguido y recibe completas
+ * solo las obras que cambiaron desde la última vez (`since`, la hora que le dio el servidor).
+ */
+export async function watchWorks(
+  missionId: string,
+  companyId: number,
+  user: AdminUser,
+  since: string | null,
+): Promise<{ ok: true; now: string; base: number; works: WatchedWork[] } | { ok: false }> {
+  if (user.role === "empresa" && user.company_id !== companyId) return { ok: false };
+  const def = await missionBuild(missionId);
+  if (!def) return { ok: false };
+  const now = (await one<{ now: string }>("SELECT datetime('now') AS now"))!.now;
+  const rows = await all<{
+    id: string;
+    name: string;
+    completed_at: string | null;
+    started: number;
+    brick_count: number | null;
+    updated_at: string | null;
+    data: ArrayBuffer | null;
+  }>(
+    `SELECT p.id, p.participant_name AS name, p.completed_at,
+            (w.participation_id IS NOT NULL) AS started, w.brick_count, w.updated_at,
+            CASE WHEN w.updated_at >= ? THEN w.data END AS data
+     FROM participations p
+     JOIN activity_codes ac ON ac.id = p.activity_code_id
+     LEFT JOIN brick_works w ON w.participation_id = p.id
+     WHERE ac.mission_id = ? AND ac.company_id = ?
+       AND NOT EXISTS (SELECT 1 FROM activity_code_archive a WHERE a.activity_code_id = ac.id)
+     ORDER BY p.started_at`,
+    [since ?? "", missionId, companyId],
+  );
+  return {
+    ok: true,
+    now,
+    base: def.base,
+    works: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      started: Number(r.started) === 1,
+      submitted: r.completed_at !== null,
+      count: Number(r.brick_count ?? 0),
+      updatedMs: r.updated_at ? Date.parse(`${r.updated_at.replace(" ", "T")}Z`) : null,
+      ...(r.data ? { data: Buffer.from(new Uint8Array(r.data)).toString("base64") } : {}),
+    })),
+  };
+}

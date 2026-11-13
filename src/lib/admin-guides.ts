@@ -208,6 +208,13 @@ export const GUIDES: readonly Guide[] = [
       },
       {
         path: EMPRESA,
+        target: "actividad-visor",
+        optional: true,
+        title: "Ver en vivo",
+        body: "En los retos de construcción, abre el visor: ves las obras de todos creciendo mientras construyen. Sirve para seguir el taller o proyectarlo en la sala.",
+      },
+      {
+        path: EMPRESA,
         target: "actividad-certificados",
         optional: true,
         title: "Certificados",

@@ -1,0 +1,318 @@
+/* Visor en tiempo real del admin. Mundo claro, con los tokens de Bricks Serious Play. */
+
+.root {
+  composes: tokens from "../tokens.module.css";
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-poppins), sans-serif;
+}
+
+.stage {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 180px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: var(--lift);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.labelOn {
+  background: var(--ink);
+  color: #fff;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.empty b {
+  font-family: "Cal Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.focusChip {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--r-m);
+  background: var(--surface);
+  box-shadow: var(--float);
+  font-size: 13.5px;
+}
+
+.focusChip b {
+  font-family: "Cal Sans", sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.focusChip span {
+  color: var(--ink-3);
+}
+
+.focusChip button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-s);
+  background: var(--well);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 20px 18px;
+  background: var(--surface);
+  box-shadow: -1px 0 0 var(--line);
+  overflow-y: auto;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-ink);
+  text-decoration: none;
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.live::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: blink 1.6s ease-in-out infinite;
+}
+
+.liveOff {
+  color: var(--red);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.title {
+  margin: 6px 0 0;
+  font-family: "Cal Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.company {
+  margin: -6px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 10px 12px;
+  border-radius: var(--r-m);
+  background: var(--well);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.counts b {
+  color: var(--ink);
+}
+
+.none {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--r-s);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.person:hover:not(:disabled) {
+  background: var(--well);
+}
+
+.person[aria-pressed="true"] {
+  background: var(--brand-tint);
+}
+
+.person:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.person:focus-visible,
+.focusChip button:focus-visible,
+.back:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--well-strong);
+}
+
+.dot[data-state="construyendo"] {
+  background: var(--brand);
+  box-shadow: 0 0 0 4px var(--brand-tint);
+}
+
+.dot[data-state="entrego"] {
+  background: var(--green);
+}
+
+.dot[data-state="quieto"] {
+  background: var(--yellow);
+}
+
+.personText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.personName {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.personState {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.pieces {
+  flex: none;
+  min-width: 34px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--well);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.note {
+  margin: auto 0 0;
+  padding-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+@media (max-width: 860px) {
+  .root {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr minmax(0, 42vh);
+  }
+
+  .panel {
+    box-shadow: 0 -1px 0 var(--line);
+    padding: 14px 16px max(14px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live::before {
+    animation: none;
+  }
+}

@@ -429,6 +429,12 @@ CREATE TABLE IF NOT EXISTS brick_sessions (
 );
 
 -- El PIN solo es único entre las sesiones abiertas; se recicla al terminar.
+-- Kit de piezas de una sala en equipo: cada equipo tiene su propia bolsa. Sin fila = todas las piezas.
+CREATE TABLE IF NOT EXISTS brick_session_kit (
+  session_id INTEGER PRIMARY KEY REFERENCES brick_sessions(id) ON DELETE CASCADE,
+  kit_key    TEXT NOT NULL
+);
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_brick_sessions_open_pin ON brick_sessions(pin) WHERE status <> 'finished';
 CREATE INDEX IF NOT EXISTS idx_brick_sessions_company ON brick_sessions(company_id);
 

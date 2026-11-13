@@ -54,6 +54,7 @@ const REJECTION: Record<string, string> = {
   rol: "En esta ronda te toca describir: construye tu pareja",
   parcela: "Esa parte es de otra persona: la pieza tiene que tocar tu franja",
   presupuesto: "Tu equipo ya usó todas sus piezas",
+  kit: "Ya no quedan de esas piezas en la bolsa de tu equipo",
   fuera: "Esa pieza queda fuera de la base",
   invalida: "No pudimos mandar esa pieza",
 };

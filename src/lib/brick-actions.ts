@@ -22,6 +22,7 @@ export async function launchTeamSession(_prev: LaunchState, formData: FormData):
     mode: String(formData.get("mode") ?? ""),
     teamSize: Number(formData.get("teamSize")),
     timeLimit: Number(formData.get("timeLimit")),
+    kit: String(formData.get("kit") ?? "") || undefined,
   });
   if (!res.ok) return { error: res.error };
   redirect(`/admin/equipos/${res.id}`);

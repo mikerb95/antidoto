@@ -21,6 +21,7 @@ import ExpandableList from "@/components/admin/ExpandableList";
 import SavedToast from "@/components/admin/SavedToast";
 import PortalUsersPanel from "@/components/admin/users/PortalUsersPanel";
 import { ArrowRightIcon, GearIcon, InboxIcon, UsersIcon } from "@/components/icons";
+import { BRICKS_VISIBLE } from "@/lib/bricks/visible";
 
 export const dynamic = "force-dynamic";
 
@@ -235,6 +236,18 @@ export default async function EmpresaPage({
                       style={{ ...secondaryButton, height: 40, display: "inline-flex", alignItems: "center" }}
                     >
                       Certificados ({done})
+                    </Link>
+                  )}
+                  {/* Retos de construcción: ver las obras creciendo mientras construyen. */}
+                  {BRICKS_VISIBLE && first.mission_id.startsWith("bld-") && total > 0 && (
+                    <Link
+                      href={`/admin/visor/${first.mission_id}/${company.id}`}
+                      data-guide="actividad-visor"
+                      className="btn-secondary"
+                      style={{ ...secondaryButton, height: 40, display: "inline-flex", alignItems: "center", gap: 8 }}
+                    >
+                      <span aria-hidden style={{ width: 8, height: 8, borderRadius: 8, background: "#1F8A4C" }} />
+                      Ver en vivo
                     </Link>
                   )}
                   <Link
