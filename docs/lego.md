@@ -196,4 +196,12 @@ esas piezas, en sus colores y cantidades; la bandeja muestra cuántas quedan de 
 - El servidor rechaza obras que se pasen del kit (`validateWork`).
 - Se agregaron 7 colores al final de la paleta (verde oscuro, rosa oscuro, azul medio, plata y
   tres transparentes) para respetar los colores reales de las bolsas.
-- Falta: kits en las salas de equipo (el Starter sirve para grupos de hasta 4).
+- Salas de equipo: se elige al abrir la sala (solo el Starter, equipos de hasta 4; Teléfono Roto
+  no admite kit). Cada equipo comparte su bolsa; tabla `brick_session_kit`.
+- La placa 2x3 se agregó al catálogo (id 31) para que el pato quede idéntico.
+
+## Visor en tiempo real (2026-11-13)
+
+`/admin/visor/[misión]/[empresa]`, con el botón "Ver en vivo" en la tarjeta de la actividad. Todas
+las obras de un reto en una escena 3D, con el nombre bajo cada base; pregunta cada 4 s qué
+cambió (usa el autoguardado del constructor, no gasta Ably) y anima solo las piezas nuevas.
